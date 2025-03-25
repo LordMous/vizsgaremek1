@@ -9,6 +9,8 @@ function Dashboard() {
   const [selectedChat, setSelectedChat] = useState(null);
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
+  const [chatDetails, setChatDetails] = useState([]);
+
 
   const currentUser = useMemo(() => authService.getCurrentUser(), []);
   
@@ -24,15 +26,25 @@ function Dashboard() {
       }
     };
 
+    
+
     if (currentUser) {
-      fetchChats();
+      fetchChats(); 
+      valami();
     }
   }, [currentUser]);
+
+  useEffect(() => {
+    if (chats.length > 0) {
+      valami();
+    }
+  }, [chats]);
 
   useEffect(() => {
     if (selectedChat) {
       connectWebSocket();
     }
+    
   }, [selectedChat]);
 
   const connectWebSocket = () => {
@@ -68,6 +80,19 @@ function Dashboard() {
     });
   };
 
+  const valami = async () => {
+    try {
+      const responses = await Promise.all(
+        chats.map((chat) => authService.getChatDetails(chat.id))
+      );
+      const details = responses.map((response) => response.data);
+      setChatDetails(details); // Beállítjuk az összes adatot egyszerre
+      //console.log(details); // Kiírjuk az összes adatot
+    } catch (error) {
+      console.error('Error fetching chat details', error);
+    }
+  };
+
   const fetchMessages = async () => {
     try {
       const response = await authService.getMessages(selectedChat.id);
@@ -78,8 +103,17 @@ function Dashboard() {
     }
   };
 
+  const disconnectWebSocket = () => {
+    if (stompClient.current && stompClient.current.connected) {
+        stompClient.current.disconnect(() => {
+            console.log('WebSocket disconnected');
+        });
+    }
+};
+
   const handleChatClick = (chat) => {
     if (chat.id !== selectedChat?.id) {
+      disconnectWebSocket();
       setSelectedChat(chat);
     }
   };
@@ -98,7 +132,8 @@ function Dashboard() {
 
         setNewMessage('');
     }
-};
+  };
+
 
   if (!currentUser) {
     return <div>Please log in to view your dashboard.</div>;
@@ -111,11 +146,24 @@ function Dashboard() {
         <div style={{ flex: 1 }}>
           <h2>Chats</h2>
           <ul>
-            {chats.map((chat) => (
-              <li key={chat.id} onClick={() => handleChatClick(chat)}>
-                Chat with {chat.user1 && chat.user1.userName === currentUser.userName ? chat.user2?.userName : chat.user1?.userName}
-              </li>
-            ))}
+          {chats.map((chat) => {
+  const chatDetail = chatDetails.find(detail => detail.id === chat.id);
+
+  if (!chatDetail) {
+    return null; // Ha nincs meg a részletek között, ne jelenítsünk meg semmit
+  }
+
+  const otherUser = chatDetail.user1Name === currentUser.userName 
+    ? chatDetail.user2Name 
+    : chatDetail.user1Name;
+
+  return (
+    <li key={chat.id} onClick={() => handleChatClick(chat)}>
+       {otherUser || "Unknown User"}
+    </li>
+  );
+})}
+
           </ul>
         </div>
         <div style={{ flex: 2 }}>

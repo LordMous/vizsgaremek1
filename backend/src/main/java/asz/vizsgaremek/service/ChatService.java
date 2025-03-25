@@ -25,4 +25,8 @@ public class ChatService {
         return repository.findByUser1OrUser2(user, user);
     }
 
+    public Chat getChatById(Integer chatId) {
+        return repository.findById(chatId)
+                .orElseThrow(() -> new RuntimeException("Chat not found"));
+    }
 }

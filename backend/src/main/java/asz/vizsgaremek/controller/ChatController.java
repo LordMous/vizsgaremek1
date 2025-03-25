@@ -1,6 +1,7 @@
 package asz.vizsgaremek.controller;
 
 import asz.vizsgaremek.auth.JwtUtil;
+import asz.vizsgaremek.dto.user.chat.ChatDTO;
 import asz.vizsgaremek.model.Chat;
 import asz.vizsgaremek.service.ChatService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -39,6 +40,18 @@ public class ChatController {
         String username = jwtUtil.extractUsername(extractToken(token));
         return ResponseEntity.ok(chatService.getChatsForUser(username));
     }
+
+    @Operation(summary = "Get chat details from chatID")
+    @GetMapping("/{chatId}")
+    public ResponseEntity<ChatDTO> getChatById(@PathVariable Integer chatId) {
+
+        Chat chat = chatService.getChatById(chatId);
+
+        ChatDTO d = new ChatDTO(chat.getId(),chat.getUser1().getUserName(),chat.getUser2().getUserName());
+
+        return ResponseEntity.ok(d);
+    }
+
 
     private String extractToken(String token) {
         if (token.startsWith("Bearer ")) {
