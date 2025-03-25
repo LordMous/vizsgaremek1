@@ -50,7 +50,12 @@ function Dashboard() {
             console.log(receivedMessage.content);
             // Ellenőrizzük, hogy az üzenet nem üres
             if (receivedMessage.content && receivedMessage.chatId === selectedChat?.id) {
-                setMessages((prevMessages) => [...prevMessages, receivedMessage]);
+                setMessages((prevMessages) => [...prevMessages, {
+                  sender: receivedMessage.sender,
+                  message: receivedMessage.content,
+                  createdAt: new Date(),
+
+                }]);
               
               }
         }
