@@ -10,7 +10,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
     public void configureMessageBroker(MessageBrokerRegistry config) {
-        config.enableSimpleBroker("/topic", "/queue"); // Külön válaszd el a topic és queue útvonalakat
+        config.enableSimpleBroker("/topic", "/queue","/user"); // Külön válaszd el a topic és queue útvonalakat
         config.setApplicationDestinationPrefixes("/app");
         config.setUserDestinationPrefix("/user"); // Privát csatorna
     }

@@ -45,14 +45,16 @@ function Dashboard() {
       // Feliratkozás a privát üzenetek csatornájára
       stompClient.current.subscribe('/user/queue/messages', (message) => {
         if (message.body) {
-          const receivedMessage = JSON.parse(message.body);
-          console.log('Received WebSocket message:', receivedMessage);
-          // Csak akkor frissítjük az üzeneteket, ha az üzenet az aktuális chathez tartozik
-          if (receivedMessage.chatId === selectedChat?.id) {
-            setMessages((prevMessages) => [...prevMessages, receivedMessage]);
-          }
+            const receivedMessage = JSON.parse(message.body);
+            console.log('Received WebSocket message:', receivedMessage.content);
+            console.log(receivedMessage.content);
+            // Ellenőrizzük, hogy az üzenet nem üres
+            if (receivedMessage.content && receivedMessage.chatId === selectedChat?.id) {
+                setMessages((prevMessages) => [...prevMessages, receivedMessage]);
+              
+              }
         }
-      });
+    });
   
       // Az aktuális chat üzeneteinek betöltése
       fetchMessages();
@@ -80,23 +82,18 @@ function Dashboard() {
   const handleSendMessage = (e) => {
     e.preventDefault();
     if (stompClient.current && stompClient.current.connected && newMessage.trim() !== '') {
-      const message = {
-        sender: currentUser.userName,
-        content: newMessage,
-        chatId: selectedChat.id,
-      };
-  
-      stompClient.current.send('/app/chat', {}, JSON.stringify(message));
-  
-      // Azonnal hozzáadjuk az üzenetet a listához
-      setMessages((prevMessages) => [
-        ...prevMessages,
-        { sender: currentUser.userName, message: newMessage, chatId: selectedChat.id },
-      ]);
-  
-      setNewMessage('');
+        const message = {
+            sender: currentUser.userName,
+            content: newMessage,
+            chatId: selectedChat.id,
+        };
+
+        // Csak küldjük el, de NEM frissítjük a messages listát azonnal
+        stompClient.current.send('/app/chat', {}, JSON.stringify(message));
+
+        setNewMessage('');
     }
-  };
+};
 
   if (!currentUser) {
     return <div>Please log in to view your dashboard.</div>;

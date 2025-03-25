@@ -82,15 +82,23 @@ public class MessageController {
     private void sendPrivateSocketMessage(int chatId, String senderUsername, String content) {
         String receiverUsername = messageService.getChatPartner(chatId, senderUsername);
 
+        if (receiverUsername == null) {
+            System.out.println("Receiver username is null");
+            return;
+        }
+
         SocketMessage socketMessage = new SocketMessage();
         socketMessage.setSenderUsername(senderUsername);
         socketMessage.setContent(content);
         socketMessage.setChatId(chatId);
         socketMessage.setTimestamp(LocalDateTime.now());
+
         System.out.println("Sending socket message: " + socketMessage.getContent());
+
         // Küldés a címzettnek
         template.convertAndSendToUser(receiverUsername, "/queue/messages", socketMessage);
-        System.out.println("Sending message to user: " + receiverUsername);
+        System.out.println("Sent message to user: " + receiverUsername);
+
         // Küldés a küldőnek is (UI frissítés)
         template.convertAndSendToUser(senderUsername, "/queue/messages", socketMessage);
     }

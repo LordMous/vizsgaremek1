@@ -17,6 +17,7 @@ public class WebSocketController {
     private SimpMessagingTemplate template;
 
     @MessageMapping("/chat")
+    @SendTo("/user/queue/messages") // Ezzel jelezheted, hogy a privát csatornára küldöd
     public String sendMessage(String message) {
         System.out.println("Sending message: " + message);
         return message; // Visszaküldjük az üzenetet a klienseknek
