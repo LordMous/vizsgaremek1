@@ -17,9 +17,8 @@ public class WebSocketController {
     private SimpMessagingTemplate template;
 
     @MessageMapping("/chat")
-    @SendTo("/topic/messages")
     public String sendMessage(String message) {
-
+        System.out.println("Sending message: " + message);
         return message; // Visszaküldjük az üzenetet a klienseknek
     }
 

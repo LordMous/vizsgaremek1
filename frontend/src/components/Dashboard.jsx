@@ -38,7 +38,7 @@ function Dashboard() {
   const connectWebSocket = () => {
     const socket = new SockJS('http://localhost:8080/ws');
     stompClient.current = Stomp.over(socket);
-  
+    console.log('Connecting to WebSocket...');
     stompClient.current.connect({}, () => {
       console.log('Connected to WebSocket');
   
@@ -46,7 +46,7 @@ function Dashboard() {
       stompClient.current.subscribe('/user/queue/messages', (message) => {
         if (message.body) {
           const receivedMessage = JSON.parse(message.body);
-  
+          console.log('Received WebSocket message:', receivedMessage);
           // Csak akkor frissítjük az üzeneteket, ha az üzenet az aktuális chathez tartozik
           if (receivedMessage.chatId === selectedChat?.id) {
             setMessages((prevMessages) => [...prevMessages, receivedMessage]);

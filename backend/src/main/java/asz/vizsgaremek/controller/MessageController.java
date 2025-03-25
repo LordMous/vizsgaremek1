@@ -87,7 +87,7 @@ public class MessageController {
         socketMessage.setContent(content);
         socketMessage.setChatId(chatId);
         socketMessage.setTimestamp(LocalDateTime.now());
-
+        System.out.println("Sending socket message: " + socketMessage.getContent());
         // Küldés a címzettnek
         template.convertAndSendToUser(receiverUsername, "/queue/messages", socketMessage);
         System.out.println("Sending message to user: " + receiverUsername);
