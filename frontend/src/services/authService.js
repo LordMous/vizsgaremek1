@@ -8,10 +8,10 @@
 
   const login = (loginRequest) => {
     return axios.post(`${API_URL}/auth/login`, loginRequest);
-  };
+  }
 
   const getAuthHeaders = () => {
-    const token = localStorage.getItem('token');
+    const token = sessionStorage.getItem('token'); // localStorage helyett sessionStorage
     return {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -19,8 +19,8 @@
     };
   };
 
-  const getUserData = () => {
-    return axios.get(`${API_URL}/user`, getAuthHeaders());
+  const getUserData = (userId) => {
+    return axios.get(`${API_URL}/user/${userId}`, getAuthHeaders());
   };
 
   const getChats = () => {
@@ -39,12 +39,23 @@
     return axios.get(`${API_URL}/chat/${chatId}`, getAuthHeaders());
   };
 
+
+  const updateUser = (userData) => {
+    return axios.put(`${API_URL}/user/${userData.id}`, userData, getAuthHeaders());
+  };
+
+
   const getCurrentUser = () => {
-    const token = localStorage.getItem('token');
+    const token = sessionStorage.getItem('token'); // localStorage helyett sessionStorage
+    const userId = sessionStorage.getItem('userId');
+
     if (!token) return null;
     const payload = JSON.parse(atob(token.split('.')[1]));
-    return { userName: payload.sub };
+    return { userName: payload.sub,
+              userId: userId,
+     };
   };
+  
 
   export default {
     register,
@@ -55,4 +66,5 @@
     sendMessage,
     getCurrentUser,
     getChatDetails,
+    updateUser,
   };

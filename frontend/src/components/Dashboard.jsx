@@ -3,7 +3,7 @@ import { Stomp } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
 import authService from '../services/authService';
 import { useMemo } from 'react';
-
+import { Link } from 'react-router-dom';
 function Dashboard() {
   const [chats, setChats] = useState([]);
   const [selectedChat, setSelectedChat] = useState(null);
@@ -11,10 +11,19 @@ function Dashboard() {
   const [newMessage, setNewMessage] = useState('');
   const [chatDetails, setChatDetails] = useState([]);
 
-
-  const currentUser = useMemo(() => authService.getCurrentUser(), []);
+  const [currentUser, setCurrentUser] = useState(authService.getCurrentUser());
   
   const stompClient = useRef(null);
+
+  useEffect(() => {
+    const handleStorageChange = () => {
+      setCurrentUser(authService.getCurrentUser());
+    };
+  
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
+
 
   useEffect(() => {
     const fetchChats = async () => {
@@ -141,28 +150,33 @@ function Dashboard() {
 
   return (
     <div>
-      <h1>Dashboard</h1>
-      <div style={{ display: 'flex' }}>
+      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <h1>Dashboard</h1>
+            <nav>
+              <Link to="/profile">Profile</Link>
+            </nav>
+      </header>
+        <div style={{ display: 'flex' }}>
         <div style={{ flex: 1 }}>
           <h2>Chats</h2>
           <ul>
           {chats.map((chat) => {
-  const chatDetail = chatDetails.find(detail => detail.id === chat.id);
+            const chatDetail = chatDetails.find(detail => detail.id === chat.id);
 
-  if (!chatDetail) {
-    return null; // Ha nincs meg a részletek között, ne jelenítsünk meg semmit
-  }
+            if (!chatDetail) {
+              return null; // Ha nincs meg a részletek között, ne jelenítsünk meg semmit
+            }
 
-  const otherUser = chatDetail.user1Name === currentUser.userName 
-    ? chatDetail.user2Name 
-    : chatDetail.user1Name;
+            const otherUser = chatDetail.user1Name === currentUser.userName 
+              ? chatDetail.user2Name 
+              : chatDetail.user1Name;
 
-  return (
-    <li key={chat.id} onClick={() => handleChatClick(chat)}>
-       {otherUser || "Unknown User"}
-    </li>
-  );
-})}
+            return (
+              <li key={chat.id} onClick={() => handleChatClick(chat)}>
+                {otherUser || "Unknown User"}
+              </li>
+            );
+          })}
 
           </ul>
         </div>

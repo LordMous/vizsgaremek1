@@ -1,4 +1,4 @@
-package asz.vizsgaremek.config;
+package asz.vizsgaremek.auth.websocket;
 
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.CloseStatus;

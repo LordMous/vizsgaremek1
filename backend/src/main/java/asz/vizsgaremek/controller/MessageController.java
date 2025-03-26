@@ -1,7 +1,8 @@
 package asz.vizsgaremek.controller;
 
 import asz.vizsgaremek.auth.JwtUtil;
-import asz.vizsgaremek.config.ChatWebSocketHandler;
+import asz.vizsgaremek.auth.websocket.ChatWebSocketHandler;
+import asz.vizsgaremek.auth.websocket.WebSocketController;
 import asz.vizsgaremek.dto.user.message.MessageDTO;
 import asz.vizsgaremek.dto.user.message.MessageRequest;
 import asz.vizsgaremek.dto.user.message.SocketMessage;

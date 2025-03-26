@@ -1,4 +1,4 @@
-package asz.vizsgaremek.config;
+package asz.vizsgaremek.auth.websocket;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
