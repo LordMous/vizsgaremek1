@@ -26,6 +26,9 @@ public class Contact {
     @JoinColumn(name = "contact_user_id", referencedColumnName = "id")
     private User contactUser;
 
+    @Enumerated(EnumType.STRING)
+    private Status status;
+
     // További mezők, ha szükséges
     // Getterek és setterek
 }

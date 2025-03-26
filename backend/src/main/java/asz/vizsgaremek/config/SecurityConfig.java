@@ -39,6 +39,7 @@ public class SecurityConfig {
                         .requestMatchers("/user/list").authenticated()
                         .requestMatchers("/auth/register").permitAll()
                         .requestMatchers("/chat/**").authenticated()
+                        .requestMatchers("/contacts/**").authenticated()
                         .requestMatchers("/message/**").authenticated()
                         .requestMatchers("/user/**").authenticated()
                         .requestMatchers("/ws/**", "/topic/**", "/app/**").permitAll()

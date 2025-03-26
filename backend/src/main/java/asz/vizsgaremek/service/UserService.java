@@ -7,6 +7,7 @@ import asz.vizsgaremek.dto.user.UserSave;
 import asz.vizsgaremek.exception.UserNotFoundException;
 import asz.vizsgaremek.model.User;
 import asz.vizsgaremek.repository.UserRepository;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -102,5 +103,12 @@ public class UserService {
             throw new RuntimeException("Hibás jelszó!");
         }
         return jwtUtil.generateToken(user.getEmail()); // JWT token generálása
+    }
+
+
+    // Új metódus, amely a User entitást adja vissza
+    public User readUserEntity(Integer userId) {
+        return repository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("User not found with id: " + userId));
     }
 }
