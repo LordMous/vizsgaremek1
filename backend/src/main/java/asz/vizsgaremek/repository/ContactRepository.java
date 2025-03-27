@@ -11,4 +11,5 @@ import java.util.Optional;
 public interface ContactRepository extends JpaRepository<Contact, Integer> {
     List<Contact> findByUserAndStatus(User user, Status status);
     Optional<Contact> findByUserIdAndContactUserId(Integer userId, Integer contactUserId);
+    List<Contact> findByContactUserAndStatus(User contactUser, Status status);
 }

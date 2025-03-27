@@ -1,4 +1,4 @@
-package asz.vizsgaremek.auth.websocket;
+package asz.vizsgaremek.websocket;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.handler.annotation.MessageMapping;
@@ -17,6 +17,7 @@ public class WebSocketController {
     @MessageMapping("/chat")
     @SendTo("/user/queue/messages") // Ezzel jelezheted, hogy a privát csatornára küldöd
     public String sendMessage(String message) {
+
         return message; // Visszaküldjük az üzenetet a klienseknek
     }
 

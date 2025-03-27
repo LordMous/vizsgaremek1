@@ -13,6 +13,7 @@ public class ContactDTO {
     private String contactUserName; // A kontakt felhasználó neve
     private String contactEmail; // A kontakt felhasználó email címe
     private String status; // A kapcsolat státusza (pl. "PENDING", "ACCEPTED")
+    private String userName;
 
     // Konstruktor az entitásból
     public ContactDTO(Contact contact) {
@@ -22,5 +23,6 @@ public class ContactDTO {
         this.contactUserName = contact.getContactUser().getUserName();
         this.contactEmail = contact.getContactUser().getEmail();
         this.status = contact.getStatus().name(); // Enum konvertálása String-re
+        this.userName = contact.getUser().getUserName();
     }
 }

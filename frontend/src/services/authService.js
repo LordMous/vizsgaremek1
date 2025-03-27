@@ -1,70 +1,96 @@
-  import axios from 'axios';
+import axios from 'axios';
 
-  const API_URL = 'http://localhost:8080';
+const API_URL = 'http://localhost:8080';
 
-  const register = (registerRequest) => {
-    return axios.post(`${API_URL}/auth/register`, registerRequest);
+const register = (registerRequest) => {
+  return axios.post(`${API_URL}/auth/register`, registerRequest);
+};
+
+const login = (loginRequest) => {
+  return axios.post(`${API_URL}/auth/login`, loginRequest);
+};
+
+const getAuthHeaders = () => {
+  const token = sessionStorage.getItem('token'); // localStorage helyett sessionStorage
+  return {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
   };
+};
 
-  const login = (loginRequest) => {
-    return axios.post(`${API_URL}/auth/login`, loginRequest);
-  }
+const getContactsByStatus = (status) => {
+  return axios.get(`${API_URL}/contacts/${getCurrentUser().userId}?status=${status}`, getAuthHeaders());
+};
 
-  const getAuthHeaders = () => {
-    const token = sessionStorage.getItem('token'); // localStorage helyett sessionStorage
-    return {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    };
+const getUserData = (userId) => {
+  return axios.get(`${API_URL}/user/${userId}`, getAuthHeaders());
+};
+
+const getChats = () => {
+  return axios.get(`${API_URL}/chat`, getAuthHeaders());
+};
+
+const getMessages = (chatId) => {
+  return axios.get(`${API_URL}/message?chatId=${chatId}`, getAuthHeaders());
+};
+
+const sendMessage = (chatId, message) => {
+  return axios.post(`${API_URL}/message`, { chatId, message }, getAuthHeaders());
+};
+
+const getChatDetails = (chatId) => {
+  return axios.get(`${API_URL}/chat/${chatId}`, getAuthHeaders());
+};
+
+const updateUser = (userData) => {
+  return axios.put(`${API_URL}/user/${userData.id}`, userData, getAuthHeaders());
+};
+
+const getAllUsers = () => {
+  return axios.get(`${API_URL}/user/list`, getAuthHeaders());
+};
+
+const updateContactStatus = (userId, contactUserId, status) => {
+  return axios.put(
+    `${API_URL}/contacts/${userId}?contactUserId=${contactUserId}&status=${status}`,
+    null, // A body nem szükséges, mert az adatok query paraméterként kerülnek átadásra
+    getAuthHeaders()
+  );
+};
+
+const addContact = (userId, contactUserId) => {
+  return axios.post(
+    `${API_URL}/contacts/add?userId=${userId}&contactUserId=${contactUserId}`,
+    null, // A body nem szükséges, mert az adatok query paraméterként kerülnek átadásra
+    getAuthHeaders()
+  );
+};
+
+const getCurrentUser = () => {
+  const token = sessionStorage.getItem('token'); // localStorage helyett sessionStorage
+  const userId = sessionStorage.getItem('userId');
+
+  if (!token) return null;
+  const payload = JSON.parse(atob(token.split('.')[1]));
+  return {
+    userName: payload.sub,
+    userId: userId,
   };
+};
 
-  const getUserData = (userId) => {
-    return axios.get(`${API_URL}/user/${userId}`, getAuthHeaders());
-  };
-
-  const getChats = () => {
-    return axios.get(`${API_URL}/chat`, getAuthHeaders());
-  };
-
-  const getMessages = (chatId) => {
-    return axios.get(`${API_URL}/message?chatId=${chatId}`, getAuthHeaders());
-  };
-
-  const sendMessage = (chatId, message) => {
-    return axios.post(`${API_URL}/message`, { chatId, message }, getAuthHeaders());
-  };
-
-  const getChatDetails = (chatId) => {
-    return axios.get(`${API_URL}/chat/${chatId}`, getAuthHeaders());
-  };
-
-
-  const updateUser = (userData) => {
-    return axios.put(`${API_URL}/user/${userData.id}`, userData, getAuthHeaders());
-  };
-
-
-  const getCurrentUser = () => {
-    const token = sessionStorage.getItem('token'); // localStorage helyett sessionStorage
-    const userId = sessionStorage.getItem('userId');
-
-    if (!token) return null;
-    const payload = JSON.parse(atob(token.split('.')[1]));
-    return { userName: payload.sub,
-              userId: userId,
-     };
-  };
-  
-
-  export default {
-    register,
-    login,
-    getUserData,
-    getChats,
-    getMessages,
-    sendMessage,
-    getCurrentUser,
-    getChatDetails,
-    updateUser,
-  };
+export default {
+  register,
+  login,
+  getUserData,
+  getChats,
+  getMessages,
+  sendMessage,
+  getCurrentUser,
+  getChatDetails,
+  updateUser,
+  getAllUsers,
+  getContactsByStatus,
+  updateContactStatus,
+  addContact
+};

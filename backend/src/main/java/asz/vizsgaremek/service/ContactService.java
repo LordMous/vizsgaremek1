@@ -29,7 +29,12 @@ public class ContactService {
     }
 
     public List<Contact> getContactsByStatus(User user, Status status) {
-        return contactRepository.findByUserAndStatus(user, status);
+        List<Contact> sentRequests = contactRepository.findByUserAndStatus(user, status);
+        List<Contact> receivedRequests = contactRepository.findByContactUserAndStatus(user, status);
+
+        // Összefűzzük a két listát
+        sentRequests.addAll(receivedRequests);
+        return sentRequests;
     }
 
     public Contact updateContactStatus(Integer userId, Integer contactUserId, Status status) {
