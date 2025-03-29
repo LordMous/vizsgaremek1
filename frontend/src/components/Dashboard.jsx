@@ -92,6 +92,7 @@ function Dashboard() {
     }
   };
 
+  //chatek a részlete
   const valami = async () => {
     try {
       const responses = await Promise.all(
@@ -189,6 +190,32 @@ function Dashboard() {
     }
   };
 
+  const handleStartChat = async (friend) => {
+    try {
+      // Ellenőrizzük, hogy van-e már chat a baráttal
+      const existingChat = chats.find(chat =>
+        (chat.user1Id === currentUser.userId && chat.user2Id === friend.contactUserId) ||
+        (chat.user2Id === currentUser.userId && chat.user1Id === friend.contactUserId)
+      );
+  
+      if (existingChat) {
+        // Ha van meglévő chat, azt állítjuk be
+        setSelectedChat(existingChat);
+      } else {
+        // Ha nincs meglévő chat, létrehozunk egyet
+        const response = await authService.createChat(currentUser.userId, friend.contactUserId);
+        setChats([...chats, response.data]);
+        setSelectedChat(response.data);
+      }
+  
+      // Átváltunk a "Chats" fülre
+      setActiveTab('chats');
+    } catch (error) {
+      console.error('Hiba történt a beszélgetés indításakor:', error);
+      alert('Nem sikerült elindítani a beszélgetést.');
+    }
+  };
+
   const handleSendMessage = (e) => {
     e.preventDefault();
     if (stompClient.current && stompClient.current.connected && newMessage.trim() !== '') {
@@ -206,10 +233,41 @@ function Dashboard() {
     }
   };
 
+  const handleDeleteFriend = async (friend) => {
+    try {
+      // Az aktuális felhasználó azonosítója
+      const currentUserId = currentUser.userId;
+  
+      // Meghatározzuk, hogy melyik mező tartozik az aktuális felhasználóhoz
+      const userId = friend.userId === currentUserId ? friend.userId : friend.contactUserId;
+      const contactUserId = friend.userId === currentUserId ? friend.contactUserId : friend.userId;
+  
+      // Törlés a backendről (ID-k helyének megcserélése)
+      await authService.deleteContact(contactUserId, userId);
+      alert('Barát sikeresen törölve!');
+      fetchFriends(); // Frissítjük a barátok listáját
+    } catch (error) {
+      console.error('Hiba történt a barát törlésekor:', error);
+      alert('Nem sikerült törölni a barátot.');
+    }
+  };
+
+  const handleDeleteChat = async (chatId) => {
+    const confirmDelete = window.confirm('Biztosan törölni szeretnéd ezt a chatet?');
+    if (!confirmDelete) return;
+  
+    try {
+      console.log('Chat törlése indult:', chatId);
+      await authService.deleteChat(chatId);
+      alert('Chat sikeresen törölve!');
+      setChats(chats.filter(chat => chat.id !== chatId)); // Töröljük a chatet a listából
+      setSelectedChat(null); // Nincs kiválasztott chat
+    } catch (error) {
+      alert('Nem sikerült törölni a chatet.');
+    }
+  };
 
   const handleUpdateStatus = async (contactUserId, status) => {
-    console.log(contactUserId);
-    console.log(currentUser.userId);
     try {
       await authService.updateContactStatus(currentUser.userId, contactUserId, status);
       fetchPendingRequests();
@@ -264,27 +322,33 @@ function Dashboard() {
               </ul>
             </div>
             <div style={{ flex: 2 }}>
-              {selectedChat && (
-                <>
-                  <h2>Messages</h2>
-                  <ul>
-                    {messages.map((message, index) => (
-                      <li key={index}>
-                        <strong>{message.sender}:</strong> {message.message}
-                      </li>
-                    ))}
-                  </ul>
-                  <form onSubmit={handleSendMessage}>
-                    <input
-                      type="text"
-                      value={newMessage}
-                      onChange={(e) => setNewMessage(e.target.value)}
-                      required
-                    />
-                    <button type="submit">Send</button>
-                  </form>
-                </>
-              )}
+            {selectedChat && (
+  <>
+    <h2>Messages</h2>
+    <button
+      style={{ marginBottom: '10px', color: 'red' }}
+      onClick={() => handleDeleteChat(selectedChat.id)}
+    >
+      Chat törlése
+    </button>
+    <ul>
+      {messages.map((message, index) => (
+        <li key={index}>
+          <strong>{message.sender}:</strong> {message.message}
+        </li>
+      ))}
+    </ul>
+    <form onSubmit={handleSendMessage}>
+      <input
+        type="text"
+        value={newMessage}
+        onChange={(e) => setNewMessage(e.target.value)}
+        required
+      />
+      <button type="submit">Send</button>
+    </form>
+  </>
+)}
             </div>
           </div>
         )}
@@ -294,7 +358,14 @@ function Dashboard() {
             <ul>
               {users.map(user => (
                 <li key={user.id}>
-                  {user.userName} <button onClick={() => handleAddFriend(user.id)}>Add Friend</button>
+                  {user.userName}{' '}
+                  {friends.some(friend => friend.contactUserId === user.id || friend.userId === user.id) ? (
+                    <span style={{ color: 'green', marginLeft: '10px' }}>
+                      You are already friends with this user
+                    </span>
+                  ) : (
+                    <button onClick={() => handleAddFriend(user.id)}>Add Friend</button>
+                  )}
                 </li>
               ))}
             </ul>
@@ -315,16 +386,29 @@ function Dashboard() {
           </div>
         )}
         {activeTab === 'friends' && (
-          <div>
-            <h2>Friends</h2>
-            <ul>
-              {friends.map(friend => (
-                <li key={friend.id}>{friend.userName == currentUser.userName ?  friend.contactUserName : friend.userName               
-                  }</li>
-              ))}
-            </ul>
-          </div>
-        )}
+  <div>
+    <h2>Friends</h2>
+    <ul>
+    {friends.map(friend => (
+  <li key={friend.id}>
+    {friend.userName === currentUser.userName ? friend.contactUserName : friend.userName}
+    <button
+      style={{ marginLeft: '10px', color: 'red' }}
+      onClick={() => handleDeleteFriend(friend)}
+    >
+      Barát törlése
+    </button>
+    <button
+      style={{ marginLeft: '10px', color: 'blue' }}
+      onClick={() => handleStartChat(friend)}
+    >
+      Beszélgetés
+    </button>
+  </li>
+))}
+    </ul>
+  </div>
+)}
       </div>
     </div>
   );

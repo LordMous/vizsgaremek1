@@ -5,6 +5,7 @@ import asz.vizsgaremek.model.Contact;
 import asz.vizsgaremek.model.User;
 import asz.vizsgaremek.repository.ContactRepository;
 import asz.vizsgaremek.repository.UserRepository;
+import asz.vizsgaremek.websocket.WebSocketController;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -19,12 +20,18 @@ public class ContactService {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private WebSocketController webSocketController;
+
 
     public Contact addContact(User user, User contactUser) {
         Contact contact = new Contact();
         contact.setUser(user);
         contact.setContactUser(contactUser);
         contact.setStatus(Status.PENDING);
+
+
+        webSocketController.sendContactUpdate(contactUser.getUsername(), "New contact request from " + user.getUsername());
         return contactRepository.save(contact);
     }
 
@@ -47,6 +54,20 @@ public class ContactService {
         }
 
         contact.setStatus(status);
+
+        webSocketController.sendContactUpdate(contact.getUser().getUsername(), "Your contact request was " + status.toString().toLowerCase());
+        webSocketController.sendContactUpdate(contact.getContactUser().getUsername(), "You have a new contact: " + contact.getUser().getUsername());
+
         return contactRepository.save(contact);
+    }
+
+    public void deleteContact(Integer userId, Integer contactUserId) {
+        Contact contact = contactRepository.findByUserIdAndContactUserId(userId,contactUserId)
+                .orElseThrow(() -> new RuntimeException("Contact not found between user " + userId + " and " + contactUserId));
+
+        webSocketController.sendContactUpdate(contact.getUser().getUsername(), "Contact with " + contact.getContactUser().getUsername() + " was removed.");
+        webSocketController.sendContactUpdate(contact.getContactUser().getUsername(), "Contact with " + contact.getUser().getUsername() + " was removed.");
+
+        contactRepository.delete(contact);
     }
 }

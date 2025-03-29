@@ -52,6 +52,23 @@ public class ChatController {
         return ResponseEntity.ok(d);
     }
 
+    @Operation(summary = "Start a new chat or return an existing one")
+    @PostMapping("/start")
+    public ResponseEntity<ChatDTO> startChat(
+            @RequestParam Integer userId,
+            @RequestParam Integer contactUserId) {
+        Chat chat = chatService.startChat(userId, contactUserId);
+        ChatDTO chatDTO = new ChatDTO(chat.getId(), chat.getUser1().getUserName(), chat.getUser2().getUserName());
+        return ResponseEntity.ok(chatDTO);
+    }
+
+    @Operation(summary = "Delete a chat by ID")
+    @DeleteMapping("/{chatId}")
+    public ResponseEntity<Void> deleteChat(@PathVariable Integer chatId) {
+        chatService.deleteChat(chatId);
+        return ResponseEntity.noContent().build(); // 204 No Content válasz
+    }
+
 
     private String extractToken(String token) {
         if (token.startsWith("Bearer ")) {

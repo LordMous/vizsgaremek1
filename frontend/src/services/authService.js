@@ -79,6 +79,22 @@ const getCurrentUser = () => {
   };
 };
 
+const deleteContact = (userId, contactUserId) => {
+  return axios.delete(`${API_URL}/contacts/${userId}?contactUserId=${contactUserId}`, getAuthHeaders());
+};
+
+const createChat = (userId, contactUserId) => {
+  return axios.post(
+    `${API_URL}/chat/start?userId=${userId}&contactUserId=${contactUserId}`,
+    null, // A body nem szükséges, mert az adatok query paraméterként kerülnek átadásra
+    getAuthHeaders()
+  );
+};
+
+const deleteChat = (chatId) => {
+  return axios.delete(`${API_URL}/chat/${chatId}`, getAuthHeaders());
+};
+
 export default {
   register,
   login,
@@ -92,5 +108,8 @@ export default {
   getAllUsers,
   getContactsByStatus,
   updateContactStatus,
-  addContact
+  addContact,
+  deleteContact,
+  createChat,
+  deleteChat
 };

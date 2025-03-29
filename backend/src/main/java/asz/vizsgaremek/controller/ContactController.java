@@ -76,4 +76,13 @@ public class ContactController {
         return ResponseEntity.ok(new ContactDTO(updatedContact));
     }
 
+    @DeleteMapping("/{userId}")
+    @Operation(summary = "Delete a contact")
+    public ResponseEntity<ContactDTO> deleteContact(
+            @PathVariable Integer userId,
+            @RequestParam Integer contactUserId) {
+        contactService.deleteContact(userId, contactUserId);
+        return ResponseEntity.noContent().build();
+    }
+
 }
