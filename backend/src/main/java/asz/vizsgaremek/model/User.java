@@ -49,6 +49,8 @@ public class User implements UserDetails {
     @OneToMany(mappedBy = "sender")
     private List<Message> sentMessages;
 
+    @Column(name = "picture")
+    private String picture;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

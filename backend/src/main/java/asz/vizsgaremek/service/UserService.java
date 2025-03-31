@@ -2,6 +2,7 @@ package asz.vizsgaremek.service;
 
 import asz.vizsgaremek.auth.JwtUtil;
 import asz.vizsgaremek.converter.UserConverter;
+import asz.vizsgaremek.dto.user.PictureRead;
 import asz.vizsgaremek.dto.user.UserRead;
 import asz.vizsgaremek.dto.user.UserSave;
 import asz.vizsgaremek.exception.UserNotFoundException;
@@ -13,7 +14,17 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 
 @Service
@@ -110,5 +121,41 @@ public class UserService {
     public User readUserEntity(Integer userId) {
         return repository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("User not found with id: " + userId));
+    }
+
+    public void updateUserPicture(Integer id, String pic){
+        repository.updateUserPic(id,pic);
+    }
+
+    public PictureRead store(MultipartFile file, Integer userId) {
+        String rootFolder = "src/main/resources/static/";
+        String subFolderName = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
+        File fullPath = new File(rootFolder + subFolderName);
+        String fullFolderName = rootFolder + subFolderName;
+        if (!fullPath.exists()) {
+            if (!fullPath.mkdirs()) {
+                fullFolderName = rootFolder;
+            }
+        }
+        String fileNameUniquePart = '-' + new SimpleDateFormat("HH-mm-ss").format(new Date()) + '-'+ (int)(Math.random() * 1000);
+        String fileName = file.getOriginalFilename().split("\\.")[0];
+        String fileExtension = file.getOriginalFilename().split("\\.")[1];
+        String savingFileName = fileName + fileNameUniquePart + '.' + fileExtension;
+
+        Path destinationFilePath = Paths.get(fullFolderName , savingFileName);
+
+        // try with resources
+        try (InputStream inputStream = file.getInputStream()){
+            Files.copy(inputStream, destinationFilePath, StandardCopyOption.REPLACE_EXISTING);
+        } catch (IOException ex) {
+            System.out.println("Hiba: " + ex.getMessage());
+        }
+
+        updateUserPicture(userId, savingFileName);
+        User user = readUserEntity(userId);
+        PictureRead pictureRead = new PictureRead();
+        pictureRead.setId(user.getId());
+        pictureRead.setFullPath(user.getPicture());
+        return pictureRead;
     }
 }

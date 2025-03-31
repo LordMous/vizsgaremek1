@@ -95,6 +95,18 @@ const deleteChat = (chatId) => {
   return axios.delete(`${API_URL}/chat/${chatId}`, getAuthHeaders());
 };
 
+const uploadProfilePicture = (userId, file) => {
+  const formData = new FormData();
+  formData.append('file', file);
+
+  return axios.post(`${API_URL}/user/upload-picture/${userId}`, formData, {
+    headers: {
+      ...getAuthHeaders().headers,
+      'Content-Type': 'multipart/form-data',
+    },
+  });
+};
+
 export default {
   register,
   login,
@@ -111,5 +123,6 @@ export default {
   addContact,
   deleteContact,
   createChat,
-  deleteChat
+  deleteChat,
+  uploadProfilePicture
 };

@@ -10,6 +10,9 @@ function Profile() {
     age: '',
   });
   const [isEditing, setIsEditing] = useState(false);
+  const [profilePicture, setProfilePicture] = useState(null);
+  const [profilePictureUrl, setProfilePictureUrl] = useState('');
+
   const navigate = useNavigate();
 
   // Get current user and userId from token
@@ -40,6 +43,29 @@ function Profile() {
 
     fetchUserData();
   }, [ navigate]);
+
+  const handleFileChange = (e) => {
+    setProfilePicture(e.target.files[0]);
+  };
+
+  const handleFileUpload = async () => {
+    if (!profilePicture) {
+      alert('Please select a file to upload.');
+      return;
+    }
+    try {
+      const yes = authService.uploadProfilePicture(userId, profilePicture);
+      alert('Profile picture uploaded successfully!');
+      yes.then((response) => {
+        setProfilePictureUrl(response.data.fullPath);
+        console.log('File uploaded successfully:', response.data);
+      })
+      setProfilePicture(null);
+    } catch (error) {
+      console.error('Error uploading profile picture', error);
+      alert('Failed to upload profile picture.');
+    }
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -95,6 +121,20 @@ function Profile() {
   return (
     <div className="profile-container">
       <h2>Profile</h2>
+      <div className="profile-picture-container">
+      {profilePictureUrl && (
+    <img
+      src={`http://localhost:8080/kepek/2025-03-31/${profilePictureUrl}`}
+      alt="Profile"
+      className="profile-picture"
+    />
+  )}
+
+      <label>Upload Profile Picture:</label>
+          <input type="file" onChange={handleFileChange} />
+          <button onClick={handleFileUpload}>Upload</button>
+        
+      </div>
       {!isEditing ? (
         <div className="profile-view">
           <p><strong>Username:</strong> {userData.userName}</p>

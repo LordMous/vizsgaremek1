@@ -1,5 +1,6 @@
 package asz.vizsgaremek.controller;
 
+import asz.vizsgaremek.dto.user.PictureRead;
 import asz.vizsgaremek.dto.user.UserRead;
 import asz.vizsgaremek.dto.user.UserSave;
 import asz.vizsgaremek.model.User;
@@ -12,7 +13,9 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -67,5 +70,10 @@ public class UserController {
         return service.deleteUser(id);
     }
 
-
+    @CrossOrigin(origins = "http://localhost:5173")
+    @PostMapping(value = "upload-picture/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(summary = "Upload a picture of a selected user")
+    public PictureRead uploadPicture(@RequestBody MultipartFile file, @PathVariable Integer id) {
+        return service.store(file, id);
+    }
 }
