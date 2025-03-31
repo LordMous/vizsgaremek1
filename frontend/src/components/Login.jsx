@@ -13,7 +13,6 @@ function Login() {
       const response = await authService.login({ email, password });
       sessionStorage.setItem('token', response.data.token); // localStorage helyett sessionStorage
       sessionStorage.setItem('userId', response.data.userId);
-      console.log('login', response.data);
       navigate('/dashboard');
     } catch (error) {
       alert('Invalid email or password');

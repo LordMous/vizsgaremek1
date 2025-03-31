@@ -15,8 +15,8 @@ function Dashboard() {
   const [users, setUsers] = useState([]);
   const [pendingRequests, setPendingRequests] = useState([]);
   const [friends, setFriends] = useState([]);
-
   const stompClient = useRef(null);
+  const [userPictures, setUserPictures] = useState({});
 
   useEffect(() => {
     const fetchChats = async () => {
@@ -27,14 +27,32 @@ function Dashboard() {
         console.error('Error fetching chats', error);
       }
     };
-
-    
-
     if (currentUser) {
       fetchChats(); 
       valami();
     }
   }, [currentUser]);
+
+
+  useEffect(() => {
+    const loadUserPictures = async () => {
+      const pictures = {};
+      for (const user of users) {
+        try {
+          const response = await authService.getUserProfilePicture(user.id);
+          pictures[user.id] = `http://localhost:8080${response.data.picturePath}`;
+        } catch (error) {
+          console.error(`Error fetching picture for user ${user.id}`, error);
+          pictures[user.id] = '/default-profile.png'; // Egy alapértelmezett kép
+        }
+      }
+      setUserPictures(pictures);
+    };
+  
+    if (users.length > 0) {
+      loadUserPictures();
+    }
+  }, [users]);
 
   useEffect(() => {
     if (chats.length > 0) {
@@ -60,8 +78,6 @@ function Dashboard() {
       stompClient.current.subscribe('/user/queue/messages', (message) => {
         if (message.body) {
             const receivedMessage = JSON.parse(message.body);
-            console.log('Received WebSocket message:', receivedMessage.content);
-            console.log(receivedMessage.content);
             // Ellenőrizzük, hogy az üzenet nem üres
             if (receivedMessage.content && receivedMessage.chatId === selectedChat?.id) {
                 setMessages((prevMessages) => [...prevMessages, {
@@ -86,7 +102,6 @@ function Dashboard() {
     try {
       const response = await authService.getMessages(selectedChat.id);
       setMessages(response.data);
-      console.log('Fetched messages:', response.data);
     } catch (error) {
       console.error('Error fetching messages', error);
     }
@@ -132,12 +147,14 @@ function Dashboard() {
     }
   };
 
+  const handleLogout = () => {
+    sessionStorage.removeItem('token');
+    sessionStorage.removeItem('userId');
+  };
+
   const fetchUsers = async () => {
     try {
       const response = await authService.getAllUsers();
-      console.log(response.data);
-      console.log(currentUser.userId);
-      
       setUsers(response.data.filter(user => user.id !== Number(currentUser.userId)));
     } catch (error) {
       console.error('Error fetching users', error);
@@ -157,7 +174,6 @@ function Dashboard() {
   const fetchFriends = async () => {
     try {
       const response = await authService.getContactsByStatus('ACCEPTED');
-      console.log(response.data);
       setFriends(response.data);
     } catch (error) {
       console.error('Error fetching friends', error);
@@ -165,8 +181,6 @@ function Dashboard() {
   };
 
   const handleAddFriend = async (contactUserId) => {
-    console.log(contactUserId);
-    console.log(currentUser);
     try {
       await authService.addContact(currentUser.userId, contactUserId);
       alert('Friend request sent!');
@@ -287,6 +301,11 @@ function Dashboard() {
         <h1>Dashboard </h1>
         <h2>Welcome, {currentUser.userName}!</h2> 
         <nav>
+          <Link to="/login">
+          <button onClick={handleLogout} style={{ marginLeft: '10px' }}>Logout</button> {/* Logout gomb */}
+          </Link>
+        </nav>
+        <nav>
           <Link to="/profile">Profile</Link>
         </nav>
       </header>
@@ -315,6 +334,11 @@ function Dashboard() {
   
                   return (
                     <li key={chat.id} onClick={() => handleChatClick(chat)}>
+                      {<img
+
+                      
+                      >
+                      </img>}
                       {otherUser || "Unknown User"}
                     </li>
                   );
@@ -323,54 +347,63 @@ function Dashboard() {
             </div>
             <div style={{ flex: 2 }}>
             {selectedChat && (
-  <>
-    <h2>Messages</h2>
-    <button
-      style={{ marginBottom: '10px', color: 'red' }}
-      onClick={() => handleDeleteChat(selectedChat.id)}
-    >
-      Chat törlése
-    </button>
-    <ul>
-      {messages.map((message, index) => (
-        <li key={index}>
-          <strong>{message.sender}:</strong> {message.message}
-        </li>
-      ))}
-    </ul>
-    <form onSubmit={handleSendMessage}>
-      <input
-        type="text"
-        value={newMessage}
-        onChange={(e) => setNewMessage(e.target.value)}
-        required
-      />
-      <button type="submit">Send</button>
-    </form>
-  </>
-)}
+              <>
+                <h2>Messages</h2>
+                <button
+                  style={{ marginBottom: '10px', color: 'red' }}
+                  onClick={() => handleDeleteChat(selectedChat.id)}
+                >
+                  Chat törlése
+                </button>
+                <ul>
+                  {messages.map((message, index) => (
+                    <li key={index}>
+                      <strong>{message.sender}:</strong> {message.message}
+                    </li>
+                  ))}
+                </ul>
+                <form onSubmit={handleSendMessage}>
+                  <input
+                    type="text"
+                    value={newMessage}
+                    onChange={(e) => setNewMessage(e.target.value)}
+                    required
+                  />
+                  <button type="submit">Send</button>
+                </form>
+              </>
+            )}
             </div>
           </div>
         )}
         {activeTab === 'contacts' && (
-          <div>
-            <h2>All Users</h2>
-            <ul>
-              {users.map(user => (
-                <li key={user.id}>
-                  {user.userName}{' '}
-                  {friends.some(friend => friend.contactUserId === user.id || friend.userId === user.id) ? (
-                    <span style={{ color: 'green', marginLeft: '10px' }}>
-                      You are already friends with this user
-                    </span>
-                  ) : (
-                    <button onClick={() => handleAddFriend(user.id)}>Add Friend</button>
-                  )}
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
+        <div>
+          <h2>All Users</h2>
+          <ul>
+            {users.map(user => (
+              <li key={user.id} style={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
+                {
+                  <img
+                    src={userPictures[user.id]} // Helyes elérési útvonal
+                    alt={`${user.userName}'s profile`}
+                    style={{ width: '40px', height: '40px', borderRadius: '50%', marginRight: '10px' }}
+                  />
+                }
+                <span>{user.userName}</span>
+                {friends.some(friend => friend.contactUserId === user.id || friend.userId === user.id) ? (
+                  <span style={{ color: 'green', marginLeft: '10px' }}>
+                    You are already friends with this user
+                  </span>
+                ) : (
+                  <button onClick={() => handleAddFriend(user.id)} style={{ marginLeft: '10px' }}>
+                    Add Friend
+                  </button>
+                )}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
         {activeTab === 'pending' && (
           <div>
             <h2>Pending Requests</h2>
@@ -389,9 +422,25 @@ function Dashboard() {
   <div>
     <h2>Friends</h2>
     <ul>
+      
     {friends.map(friend => (
-  <li key={friend.id}>
-    {friend.userName === currentUser.userName ? friend.contactUserName : friend.userName}
+      
+      <li key={friend.id}>
+        {console.log(friend)}
+        {friend.userName === currentUser.userName ? <img
+            src={userPictures[friend.contactUserId]} // Helyes elérési útvonal
+            alt={`${friend.contactUserName}'s profile`}
+            style={{ width: '40px', height: '40px', borderRadius: '50%', marginRight: '10px' }}
+          >
+        </img> : 
+        <img
+        src={userPictures[friend.userId]} // Helyes elérési útvonal
+        alt={`${friend.userName}'s profile`}
+        style={{ width: '40px', height: '40px', borderRadius: '50%', marginRight: '10px' }}
+      >
+    </img>
+        } 
+      {friend.userName === currentUser.userName ? friend.contactUserName : friend.userName}
     <button
       style={{ marginLeft: '10px', color: 'red' }}
       onClick={() => handleDeleteFriend(friend)}

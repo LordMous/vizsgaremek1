@@ -41,10 +41,13 @@ function Profile() {
       }
     };
 
+   
+
     const fetchProfilePicture = async () => {
       try {
         if (userId) {
           const response = await authService.getUserProfilePicture(userId);
+          console.log(response.data);
           if (response.data.hasPicture) {
             setProfilePictureUrl(response.data.picturePath);
           }
@@ -71,6 +74,7 @@ function Profile() {
     try {
       const response = await authService.uploadProfilePicture(userId, profilePicture);
       alert('Profile picture uploaded successfully!');
+      console.log(response.data);
       setProfilePictureUrl(response.data.fullPath);
       setProfilePicture(null);
     } catch (error) {
@@ -134,6 +138,7 @@ function Profile() {
       
 
       <div className="profile-picture-container">
+        {console.log(profilePictureUrl)}
         {profilePictureUrl && (
           <img
             src={`http://localhost:8080${profilePictureUrl}`} // Helyes elérési útvonal
