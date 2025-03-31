@@ -52,6 +52,7 @@ public class UserConverter {
         userRead.setEmail(createdUser.getEmail());
         userRead.setPhoneNumber(createdUser.getPhoneNumber());
         userRead.setPassword(createdUser.getPassword());
+
         return userRead;
     }
 

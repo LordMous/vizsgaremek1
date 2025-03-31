@@ -1,0 +1,6 @@
+.profile-picture {
+    width: 100px;
+    height: 100px;
+    object-fit: cover; /* Levágja a képet, hogy illeszkedjen */
+    border-radius: 50%; /* Kör alakú profilkép */
+  }

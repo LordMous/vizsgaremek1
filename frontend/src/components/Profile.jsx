@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import authService from '../services/authService';
 import { useNavigate } from 'react-router-dom';
+import "./Picture.css"; // Import your CSS file for styling
+
 
 function Profile() {
   const [userData, setUserData] = useState({
@@ -9,23 +11,21 @@ function Profile() {
     phoneNumber: '',
     age: '',
   });
+
   const [isEditing, setIsEditing] = useState(false);
   const [profilePicture, setProfilePicture] = useState(null);
   const [profilePictureUrl, setProfilePictureUrl] = useState('');
 
   const navigate = useNavigate();
-
-  // Get current user and userId from token
   const currentUser = authService.getCurrentUser();
-
-  const userId = currentUser?.userId; // Feltételezve, hogy a token tartalmaz userId-t
+  const userId = currentUser?.userId;
 
   useEffect(() => {
     if (!currentUser) {
       navigate('/login');
       return;
     }
-    console.log("Profile");
+
     const fetchUserData = async () => {
       try {
         if (userId) {
@@ -41,8 +41,22 @@ function Profile() {
       }
     };
 
+    const fetchProfilePicture = async () => {
+      try {
+        if (userId) {
+          const response = await authService.getUserProfilePicture(userId);
+          if (response.data.hasPicture) {
+            setProfilePictureUrl(response.data.picturePath);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching profile picture', error);
+      }
+    };
+
     fetchUserData();
-  }, [ navigate]);
+    fetchProfilePicture();
+  }, [userId, navigate]);
 
   const handleFileChange = (e) => {
     setProfilePicture(e.target.files[0]);
@@ -53,13 +67,11 @@ function Profile() {
       alert('Please select a file to upload.');
       return;
     }
+
     try {
-      const yes = authService.uploadProfilePicture(userId, profilePicture);
+      const response = await authService.uploadProfilePicture(userId, profilePicture);
       alert('Profile picture uploaded successfully!');
-      yes.then((response) => {
-        setProfilePictureUrl(response.data.fullPath);
-        console.log('File uploaded successfully:', response.data);
-      })
+      setProfilePictureUrl(response.data.fullPath);
       setProfilePicture(null);
     } catch (error) {
       console.error('Error uploading profile picture', error);
@@ -81,19 +93,17 @@ function Profile() {
 
       await authService.updateUser({ 
         ...userData, 
-        id: userId // userId használata a frissítéshez
+        id: userId 
       });
-      
+
       alert('Profile updated successfully!');
       setIsEditing(false);
-      
-      // Frissítjük az adatokat a mentés után
       const response = await authService.getUserData(userId);
       setUserData(response.data);
     } catch (error) {
       console.error('Error updating profile', error);
       alert(error.message || 'Failed to update profile.');
-      
+
       if (error.response?.status === 401) {
         sessionStorage.removeItem('token');
         navigate('/login');
@@ -103,16 +113,16 @@ function Profile() {
 
   const handleCancel = () => {
     setIsEditing(false);
-    // Visszatöltjük az eredeti adatokat
     if (userId) {
       authService.getUserData(userId)
         .then(response => setUserData(response.data))
         .catch(error => console.error('Error reloading user data', error));
     }
   };
+
   const handleBackToDashboard = () => {
     navigate('/dashboard');
-  };   
+  };
 
   if (!currentUser) {
     return <div>Redirecting to login...</div>;
@@ -121,37 +131,32 @@ function Profile() {
   return (
     <div className="profile-container">
       <h2>Profile</h2>
-      <div className="profile-picture-container">
-      {profilePictureUrl && (
-    <img
-      src={`http://localhost:8080/kepek/2025-03-31/${profilePictureUrl}`}
-      alt="Profile"
-      className="profile-picture"
-    />
-  )}
+      
 
-      <label>Upload Profile Picture:</label>
-          <input type="file" onChange={handleFileChange} />
-          <button onClick={handleFileUpload}>Upload</button>
-        
+      <div className="profile-picture-container">
+        {profilePictureUrl && (
+          <img
+            src={`http://localhost:8080${profilePictureUrl}`} // Helyes elérési útvonal
+            alt="Profile"
+            className="profile-picture"
+          />
+        )}
+
+        <label>Upload Profile Picture:</label>
+        <input type="file" onChange={handleFileChange} />
+        <button onClick={handleFileUpload}>Upload</button>
       </div>
+
       {!isEditing ? (
         <div className="profile-view">
           <p><strong>Username:</strong> {userData.userName}</p>
           <p><strong>Email:</strong> {userData.email}</p>
           <p><strong>Phone Number:</strong> {userData.phoneNumber}</p>
           <p><strong>Age:</strong> {userData.age}</p>
-          <button 
-            className="edit-button"
-            onClick={() => setIsEditing(true)}
-          >
+          <button className="edit-button" onClick={() => setIsEditing(true)}>
             Edit
           </button>
-
-          <button
-          className="back-button"
-          onClick={handleBackToDashboard}
-          >
+          <button className="back-button" onClick={handleBackToDashboard}>
             Back to the dashboard
           </button>
         </div>
@@ -199,11 +204,7 @@ function Profile() {
           </div>
           <div className="form-actions">
             <button type="submit" className="save-button">Save</button>
-            <button 
-              type="button" 
-              onClick={handleCancel}
-              className="cancel-button"
-            >
+            <button type="button" onClick={handleCancel} className="cancel-button">
               Cancel
             </button>
           </div>

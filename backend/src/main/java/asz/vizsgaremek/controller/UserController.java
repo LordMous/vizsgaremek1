@@ -14,10 +14,12 @@ import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/user")
@@ -70,10 +72,26 @@ public class UserController {
         return service.deleteUser(id);
     }
 
+
     @CrossOrigin(origins = "http://localhost:5173")
     @PostMapping(value = "upload-picture/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "Upload a picture of a selected user")
     public PictureRead uploadPicture(@RequestBody MultipartFile file, @PathVariable Integer id) {
         return service.store(file, id);
+    }
+
+
+    @GetMapping("/{userId}/picture")
+    public ResponseEntity<?> getUserPicture(@PathVariable Integer userId) {
+        String picturePath = service.getUserPicturePath(userId);
+
+        if (picturePath == null || picturePath.isEmpty()) {
+            return ResponseEntity.ok().body(Map.of("hasPicture", false));
+        }
+
+        return ResponseEntity.ok().body(Map.of(
+                "hasPicture", true,
+                "picturePath", picturePath
+        ));
     }
 }

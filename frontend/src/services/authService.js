@@ -107,6 +107,11 @@ const uploadProfilePicture = (userId, file) => {
   });
 };
 
+const getUserProfilePicture = (userId) => {
+  return axios.get(`${API_URL}/user/${userId}/picture`, getAuthHeaders());
+}
+
+
 export default {
   register,
   login,
@@ -124,5 +129,6 @@ export default {
   deleteContact,
   createChat,
   deleteChat,
-  uploadProfilePicture
+  uploadProfilePicture,
+  getUserProfilePicture,
 };

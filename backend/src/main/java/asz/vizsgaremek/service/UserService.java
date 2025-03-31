@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
@@ -26,6 +27,7 @@ import java.nio.file.StandardCopyOption;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class UserService {
@@ -49,6 +51,7 @@ public class UserService {
 
     public UserRead createUser(UserSave userSave){
         User user = UserConverter.convertSaveToModel(userSave);
+        user.setPicture("/images/basic/basic.png");
         User createdUser = repository.save(user);
         return UserConverter.convertModelToRead(createdUser);
     }
@@ -127,35 +130,74 @@ public class UserService {
         repository.updateUserPic(id,pic);
     }
 
+
     public PictureRead store(MultipartFile file, Integer userId) {
-        String rootFolder = "src/main/resources/static/";
+        String uploadDir = "uploads/";
         String subFolderName = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
-        File fullPath = new File(rootFolder + subFolderName);
-        String fullFolderName = rootFolder + subFolderName;
-        if (!fullPath.exists()) {
-            if (!fullPath.mkdirs()) {
-                fullFolderName = rootFolder;
+        Path fullPath = Paths.get(uploadDir, subFolderName);
+
+        // Mappa létrehozása, ha nem létezik
+        try {
+            Files.createDirectories(fullPath);
+        } catch (IOException e) {
+            throw new RuntimeException("Nem sikerült létrehozni a célmappát", e);
+        }
+
+        // Alapértelmezett profilkép útvonala
+        String defaultProfilePicture = "/images/basic/basic.png";
+        String defaultProfileStoragePath = "uploads/basic/basic.png"; // Fizikai fájl elérési útja
+
+        // Lekérdezzük a felhasználó jelenlegi képének elérési útját
+        User user = readUserEntity(userId);
+        String oldPicturePath = user.getPicture(); // Pl. "/images/2025-03-30/kep.png"
+
+        // Ha van korábbi kép és NEM a default, akkor töröljük
+        if (oldPicturePath != null && !oldPicturePath.isEmpty()) {
+            Path oldFilePath = Paths.get(uploadDir, oldPicturePath.replace("/images/", ""));
+
+            // **Csak akkor töröljük, ha nem a default kép**
+            if (!oldPicturePath.equals(defaultProfilePicture) && !oldFilePath.toString().equals(defaultProfileStoragePath)) {
+                try {
+                    Files.deleteIfExists(oldFilePath);
+                } catch (IOException e) {
+                    System.err.println("Nem sikerült törölni a régi képet: " + oldFilePath);
+                }
             }
         }
-        String fileNameUniquePart = '-' + new SimpleDateFormat("HH-mm-ss").format(new Date()) + '-'+ (int)(Math.random() * 1000);
-        String fileName = file.getOriginalFilename().split("\\.")[0];
-        String fileExtension = file.getOriginalFilename().split("\\.")[1];
-        String savingFileName = fileName + fileNameUniquePart + '.' + fileExtension;
 
-        Path destinationFilePath = Paths.get(fullFolderName , savingFileName);
+        // Új fájlnév generálása
+        String fileExtension = StringUtils.getFilenameExtension(file.getOriginalFilename());
+        String baseFileName = StringUtils.stripFilenameExtension(file.getOriginalFilename());
 
-        // try with resources
-        try (InputStream inputStream = file.getInputStream()){
-            Files.copy(inputStream, destinationFilePath, StandardCopyOption.REPLACE_EXISTING);
-        } catch (IOException ex) {
-            System.out.println("Hiba: " + ex.getMessage());
+        if (fileExtension == null || baseFileName == null) {
+            throw new RuntimeException("Érvénytelen fájlnév");
         }
 
-        updateUserPicture(userId, savingFileName);
-        User user = readUserEntity(userId);
+        String uniqueFileName = baseFileName + "-" + UUID.randomUUID() + "." + fileExtension;
+        Path destinationFilePath = fullPath.resolve(uniqueFileName);
+
+        // Fájl mentése
+        try (InputStream inputStream = file.getInputStream()) {
+            Files.copy(inputStream, destinationFilePath, StandardCopyOption.REPLACE_EXISTING);
+        } catch (IOException ex) {
+            throw new RuntimeException("Hiba történt a fájl mentésekor", ex);
+        }
+
+        // Új kép elérési út frissítése az adatbázisban
+        String newPicturePath = "/images/" + subFolderName + "/" + uniqueFileName;
+        updateUserPicture(userId, newPicturePath);
+
         PictureRead pictureRead = new PictureRead();
         pictureRead.setId(user.getId());
-        pictureRead.setFullPath(user.getPicture());
+        pictureRead.setFullPath(newPicturePath);
+
         return pictureRead;
     }
+
+    public String getUserPicturePath(Integer userId) {
+        return repository.findById(userId)
+                .map(User::getPicture)
+                .orElse(null);
+    }
+
 }
