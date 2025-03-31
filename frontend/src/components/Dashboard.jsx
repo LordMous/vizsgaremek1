@@ -17,6 +17,7 @@ function Dashboard() {
   const [friends, setFriends] = useState([]);
   const stompClient = useRef(null);
   const [userPictures, setUserPictures] = useState({});
+  
 
   useEffect(() => {
     const fetchChats = async () => {
@@ -281,9 +282,9 @@ function Dashboard() {
     }
   };
 
-  const handleUpdateStatus = async (contactUserId, status) => {
+  const handleUpdateStatus = async (userId, contactUserId, status) => {
     try {
-      await authService.updateContactStatus(currentUser.userId, contactUserId, status);
+      await authService.updateContactStatus(userId, contactUserId, status);
       fetchPendingRequests();
       fetchFriends();
     } catch (error) {
@@ -323,7 +324,7 @@ function Dashboard() {
               <ul>
                 {chats.map((chat) => {
                   const chatDetail = chatDetails.find(detail => detail.id === chat.id);
-  
+                  //console.log(chatDetail); // Debugging: kiírjuk a részleteket
                   if (!chatDetail) {
                     return null; // Ha nincs meg a részletek között, ne jelenítsünk meg semmit
                   }
@@ -334,11 +335,19 @@ function Dashboard() {
   
                   return (
                     <li key={chat.id} onClick={() => handleChatClick(chat)}>
-                      {<img
+                      {users.map(user => {  
+                        if (user.userName === otherUser) {
+                          return (
+                            <img
+                            key={`friend-img-${user.id}`}
+                              src={userPictures[user.id]} // Helyes elérési útvonal
+                              alt={`${user.userName}'s profile`}
+                              style={{ width: '40px', height: '40px', borderRadius: '50%', marginRight: '10px' }}
+                            />
+                          )
+                        }
 
-                      
-                      >
-                      </img>}
+                      })}
                       {otherUser || "Unknown User"}
                     </li>
                   );
@@ -410,9 +419,12 @@ function Dashboard() {
             <ul>
               {pendingRequests.map(request => (
                 <li key={request.id}>
-                  {request.userName} 
-                  <button onClick={() => handleUpdateStatus(request.userId, 'ACCEPTED')}>Accept</button>
-                  <button onClick={() => handleUpdateStatus(request.userId, 'BLOCKED')}>Reject</button>
+                  {request.userName === currentUser.userName ? (<>
+                    {request.contactUserName}
+                    <button onClick={() => handleUpdateStatus(request.contactUserId,currentUser.userId, 'ACCEPTED')}>Accept</button>
+                    <button onClick={() => handleUpdateStatus(request.contactUserId,currentUser.id, 'BLOCKED')}>Reject</button>
+                  </>) : console.log(request.userName)}
+                  
                 </li>
               ))}
             </ul>
@@ -426,7 +438,6 @@ function Dashboard() {
     {friends.map(friend => (
       
       <li key={friend.id}>
-        {console.log(friend)}
         {friend.userName === currentUser.userName ? <img
             src={userPictures[friend.contactUserId]} // Helyes elérési útvonal
             alt={`${friend.contactUserName}'s profile`}
