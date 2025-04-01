@@ -3,6 +3,7 @@ import { Stomp } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
 import authService from '../services/authService';
 import { Link } from 'react-router-dom';
+import './Dashboard.css'
 
 function Dashboard() {
   const [chats, setChats] = useState([]);
@@ -297,178 +298,320 @@ function Dashboard() {
   }
 
   return (
-    <div>
-      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h1>Dashboard </h1>
-        <h2>Welcome, {currentUser.userName}!</h2> 
-        <nav>
-          <Link to="/login">
-          <button onClick={handleLogout} style={{ marginLeft: '10px' }}>Logout</button> {/* Logout gomb */}
-          </Link>
-        </nav>
-        <nav>
-          <Link to="/profile">Profile</Link>
-        </nav>
+    <div className="dashboard-container">
+      {/* Header */}
+      <header className="dashboard-header">
+        <div className="header-left">
+          <h1 className="app-title">ChatApp</h1>
+        </div>
+        <div className="header-right">
+          <div className="user-info">
+
+            {console.log(userPictures)}
+            {console.log(currentUser)}
+            <img 
+              src={userPictures[currentUser.userId] || '/default-profile.png'} 
+              alt="Profile" 
+              className="profile-pic-small"
+            />
+            <span className="welcome-message">Welcome, {currentUser.userName}!</span>
+          </div>
+          <nav className="header-nav">
+            <Link to="/profile" className="nav-link">Profile</Link>
+            <Link to="/login" className="nav-link" onClick={handleLogout}>
+              <button className="logout-btn">Logout</button>
+            </Link>
+          </nav>
+        </div>
       </header>
-      <nav>
-        <button onClick={() => setActiveTab('chats')}>Chats</button>
-        <button onClick={() => setActiveTab('contacts')}>All Users</button>
-        <button onClick={() => setActiveTab('pending')}>Pending Requests</button>
-        <button onClick={() => setActiveTab('friends')}>Friends</button>
+  
+      {/* Navigation Tabs */}
+      <nav className="tab-navigation">
+        <button 
+          className={`tab-button ${activeTab === 'chats' ? 'active' : ''}`}
+          onClick={() => setActiveTab('chats')}
+        >
+          Chats
+        </button>
+        <button 
+          className={`tab-button ${activeTab === 'contacts' ? 'active' : ''}`}
+          onClick={() => setActiveTab('contacts')}
+        >
+          All Users
+        </button>
+        <button 
+          className={`tab-button ${activeTab === 'pending' ? 'active' : ''}`}
+          onClick={() => setActiveTab('pending')}
+        >
+          <span className="button-span">Pending Requests 
+          {pendingRequests.length > 0 && (
+            <span className="notification-badge">{pendingRequests.length}</span>
+          )}
+          </span>
+          
+        </button>
+        <button 
+          className={`tab-button ${activeTab === 'friends' ? 'active' : ''}`}
+          onClick={() => setActiveTab('friends')}
+        >
+          Friends
+        </button>
       </nav>
-      <div>
-        {activeTab === 'chats' && (
-          <div style={{ display: 'flex' }}>
-            <div style={{ flex: 1 }}>
+  
+      {/* Main Content */}
+      <div className="main-content">
+        {/* Left Side - Chat List/User List */}
+        <div className="left-sidebar">
+          {activeTab === 'chats' && (
+            <div className="chat-list-container">
               <h2>Chats</h2>
-              <ul>
+              <ul className="chat-list">
                 {chats.map((chat) => {
                   const chatDetail = chatDetails.find(detail => detail.id === chat.id);
-                  //console.log(chatDetail); // Debugging: kiírjuk a részleteket
-                  if (!chatDetail) {
-                    return null; // Ha nincs meg a részletek között, ne jelenítsünk meg semmit
-                  }
+                  if (!chatDetail) return null;
   
                   const otherUser = chatDetail.user1Name === currentUser.userName 
                     ? chatDetail.user2Name 
                     : chatDetail.user1Name;
   
                   return (
-                    <li key={chat.id} onClick={() => handleChatClick(chat)}>
-                      {users.map(user => {  
-                        if (user.userName === otherUser) {
-                          return (
-                            <img
-                            key={`friend-img-${user.id}`}
-                              src={userPictures[user.id]} // Helyes elérési útvonal
-                              alt={`${user.userName}'s profile`}
-                              style={{ width: '40px', height: '40px', borderRadius: '50%', marginRight: '10px' }}
-                            />
-                          )
-                        }
-
-                      })}
-                      {otherUser || "Unknown User"}
+                    <li 
+                      key={chat.id} 
+                      className={`chat-item ${selectedChat?.id === chat.id ? 'active' : ''}`}
+                      onClick={() => handleChatClick(chat)}
+                    >
+                      <div className="chat-avatar">
+                        {users.map(user => {  
+                          if (user.userName === otherUser) {
+                            return (
+                              <img
+                                key={`friend-img-${user.id}`}
+                                src={userPictures[user.id] || '/default-profile.png'}
+                                alt={`${user.userName}'s profile`}
+                              />
+                            )
+                          }
+                          return null;
+                        })}
+                      </div>
+                      <div className="chat-info">
+                        <span className="chat-name">{otherUser || "Unknown User"}</span>
+                      </div>
                     </li>
                   );
                 })}
               </ul>
             </div>
-            <div style={{ flex: 2 }}>
-            {selectedChat && (
-              <>
-                <h2>Messages</h2>
-                <button
-                  style={{ marginBottom: '10px', color: 'red' }}
-                  onClick={() => handleDeleteChat(selectedChat.id)}
-                >
-                  Chat törlése
-                </button>
-                <ul>
-                  {messages.map((message, index) => (
-                    <li key={index}>
-                      <strong>{message.sender}:</strong> {message.message}
-                    </li>
-                  ))}
-                </ul>
-                <form onSubmit={handleSendMessage}>
-                  <input
-                    type="text"
-                    value={newMessage}
-                    onChange={(e) => setNewMessage(e.target.value)}
-                    required
-                  />
-                  <button type="submit">Send</button>
-                </form>
-              </>
-            )}
+          )}
+  
+          {activeTab === 'contacts' && (
+            <div className="user-list-container">
+              <h2>All Users</h2>
+              <ul className="user-list">
+                {users.map(user => (
+                  <li key={user.id} className="user-item">
+                    <div className="user-avatar">
+                      <img
+                        src={userPictures[user.id] || '/default-profile.png'}
+                        alt={`${user.userName}'s profile`}
+                      />
+                    </div>
+                    <div className="user-info">
+                      <span className="user-name">{user.userName}</span>
+                      {friends.some(friend => friend.contactUserId === user.id || friend.userId === user.id) ? (
+                        <span className="friend-status">
+                          Friends
+                        </span>
+                      ) : (
+                        <button 
+                          className="add-friend-btn"
+                          onClick={() => handleAddFriend(user.id)}
+                        >
+                          Add Friend
+                        </button>
+                      )}
+                    </div>
+                  </li>
+                ))}
+              </ul>
             </div>
-          </div>
-        )}
-        {activeTab === 'contacts' && (
-        <div>
-          <h2>All Users</h2>
-          <ul>
-            {users.map(user => (
-              <li key={user.id} style={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
-                {
-                  <img
-                    src={userPictures[user.id]} // Helyes elérési útvonal
-                    alt={`${user.userName}'s profile`}
-                    style={{ width: '40px', height: '40px', borderRadius: '50%', marginRight: '10px' }}
-                  />
-                }
-                <span>{user.userName}</span>
-                {friends.some(friend => friend.contactUserId === user.id || friend.userId === user.id) ? (
-                  <span style={{ color: 'green', marginLeft: '10px' }}>
-                    You are already friends with this user
-                  </span>
-                ) : (
-                  <button onClick={() => handleAddFriend(user.id)} style={{ marginLeft: '10px' }}>
-                    Add Friend
-                  </button>
-                )}
-              </li>
-            ))}
-          </ul>
+          )}
+  
+          {activeTab === 'pending' && (
+            <div className="pending-list-container">
+              <h2>Pending Requests</h2>
+              <ul className="pending-list">
+                {pendingRequests.map(request => (
+                  <li key={request.id} className="request-item">
+                    {request.userName === currentUser.userName && (
+                      <>
+                        <div className="request-avatar">
+                          <img
+                            src={userPictures[request.contactUserId] || '/default-profile.png'}
+                            alt={`${request.contactUserName}'s profile`}
+                          />
+                        </div>
+                        <div className="request-info">
+                          <span className="request-name">{request.contactUserName}</span>
+                          <div className="request-actions">
+                            <button 
+                              className="accept-btn"
+                              onClick={() => handleUpdateStatus(request.contactUserId, currentUser.userId, 'ACCEPTED')}
+                            >
+                              Accept
+                            </button>
+                            <button 
+                              className="reject-btn"
+                              onClick={() => handleUpdateStatus(request.contactUserId, currentUser.id, 'BLOCKED')}
+                            >
+                              Reject
+                            </button>
+                          </div>
+                        </div>
+                      </>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+  
+          {activeTab === 'friends' && (
+            <div className="friends-list-container">
+              <h2>Friends</h2>
+              <ul className="friends-list">
+                {friends.map(friend => (
+                  <li key={friend.id} className="friend-item">
+                    <div className="friend-avatar">
+                      <img
+                        src={friend.userName === currentUser.userName 
+                          ? userPictures[friend.contactUserId] || '/default-profile.png'
+                          : userPictures[friend.userId] || '/default-profile.png'}
+                        alt={friend.userName === currentUser.userName 
+                          ? `${friend.contactUserName}'s profile`
+                          : `${friend.userName}'s profile`}
+                      />
+                    </div>
+                    <div className="friend-info">
+                      <span className="friend-name">
+                        {friend.userName === currentUser.userName 
+                          ? friend.contactUserName 
+                          : friend.userName}
+                      </span>
+                      <div className="friend-actions">
+                        <button
+                          className="chat-btn"
+                          onClick={() => handleStartChat(friend)}
+                        >
+                          Chat
+                        </button>
+                        <button
+                          className="delete-btn"
+                          onClick={() => handleDeleteFriend(friend)}
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
-      )}
-        {activeTab === 'pending' && (
-          <div>
-            <h2>Pending Requests</h2>
-            <ul>
-              {pendingRequests.map(request => (
-                <li key={request.id}>
-                  {request.userName === currentUser.userName ? (<>
-                    {request.contactUserName}
-                    <button onClick={() => handleUpdateStatus(request.contactUserId,currentUser.userId, 'ACCEPTED')}>Accept</button>
-                    <button onClick={() => handleUpdateStatus(request.contactUserId,currentUser.id, 'BLOCKED')}>Reject</button>
-                  </>) : console.log(request.userName)}
+  
+        {/* Right Side - Chat Area */}
+        <div className="chat-area">
+          {selectedChat ? (
+            <>
+              <div className="chat-header">
+                {(() => {
+                  const chatDetail = chatDetails.find(detail => detail.id === selectedChat.id);
+                  if (!chatDetail) return null;
+                  const otherUser = chatDetail.user1Name === currentUser.userName 
+                    ? chatDetail.user2Name 
+                    : chatDetail.user1Name;
                   
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-        {activeTab === 'friends' && (
-  <div>
-    <h2>Friends</h2>
-    <ul>
-      
-    {friends.map(friend => (
-      
-      <li key={friend.id}>
-        {friend.userName === currentUser.userName ? <img
-            src={userPictures[friend.contactUserId]} // Helyes elérési útvonal
-            alt={`${friend.contactUserName}'s profile`}
-            style={{ width: '40px', height: '40px', borderRadius: '50%', marginRight: '10px' }}
-          >
-        </img> : 
-        <img
-        src={userPictures[friend.userId]} // Helyes elérési útvonal
-        alt={`${friend.userName}'s profile`}
-        style={{ width: '40px', height: '40px', borderRadius: '50%', marginRight: '10px' }}
-      >
-    </img>
-        } 
-      {friend.userName === currentUser.userName ? friend.contactUserName : friend.userName}
-    <button
-      style={{ marginLeft: '10px', color: 'red' }}
-      onClick={() => handleDeleteFriend(friend)}
-    >
-      Barát törlése
-    </button>
-    <button
-      style={{ marginLeft: '10px', color: 'blue' }}
-      onClick={() => handleStartChat(friend)}
-    >
-      Beszélgetés
-    </button>
-  </li>
-))}
-    </ul>
-  </div>
-)}
+                  return (
+                    <>
+                      <div className="chat-partner">
+                        <div className="partner-avatar">
+                          {users.map(user => {  
+                            if (user.userName === otherUser) {
+                              return (
+                                <img
+                                  key={`chat-img-${user.id}`}
+                                  src={userPictures[user.id] || '/default-profile.png'}
+                                  alt={`${user.userName}'s profile`}
+                                />
+                              )
+                            }
+                            return null;
+                          })}
+                        </div>
+                        <span className="partner-name">{otherUser}</span>
+                      </div>
+                      <button
+                        className="delete-chat-btn"
+                        onClick={() => handleDeleteChat(selectedChat.id)}
+                      >
+                        Delete Chat
+                      </button>
+                    </>
+                  );
+                })()}
+              </div>
+              
+              <div className="messages-container">
+                {messages.length === 0 ? (
+                  <div className="empty-chat">
+                    <p>No messages yet. Start the conversation!</p>
+                  </div>
+                ) : (
+                  <ul className="messages-list">
+                    {messages.map((message, index) => (
+                      <li 
+                        key={index} 
+                        className={`message ${message.sender === currentUser.userName ? 'sent' : 'received'}`}
+                      >
+                        <div className="message-content">
+                          {message.sender !== currentUser.userName && (
+                            <span className="sender-name">{message.sender}</span>
+                          )}
+                          <div className="message-bubble">
+                            {message.message}
+                          </div>
+                          <span className="message-time">
+                            {new Date(message.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                          </span>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+              
+              <form className="message-form" onSubmit={handleSendMessage}>
+                <input
+                  type="text"
+                  value={newMessage}
+                  onChange={(e) => setNewMessage(e.target.value)}
+                  placeholder="Type a message..."
+                  required
+                />
+                <button type="submit" className="send-btn">Send</button>
+              </form>
+            </>
+          ) : (
+            <div className="no-chat-selected">
+              <div className="welcome-illustration">
+                <i className="fas fa-comments"></i>
+              </div>
+              <h2>Welcome to ChatApp</h2>
+              <p>Select a chat to start messaging or find new friends</p>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
