@@ -29,8 +29,12 @@ function Dashboard() {
         console.error('Error fetching chats', error);
       }
     };
+
     if (currentUser) {
-      fetchChats(); 
+      fetchChats();
+      fetchUsers();
+      fetchPendingRequests();
+      fetchFriends();
       valami();
     }
   }, [currentUser]);
@@ -48,6 +52,8 @@ function Dashboard() {
           pictures[user.id] = '/default-profile.png'; // Egy alapértelmezett kép
         }
       }
+      const current = await authService.getUserProfilePicture(currentUser.userId);
+      pictures[currentUser.userId] = `http://localhost:8080${current.data.picturePath}`
       setUserPictures(pictures);
     };
   
@@ -117,7 +123,6 @@ function Dashboard() {
       );
       const details = responses.map((response) => response.data);
       setChatDetails(details); // Beállítjuk az összes adatot egyszerre
-      //console.log(details); // Kiírjuk az összes adatot
     } catch (error) {
       console.error('Error fetching chat details', error);
     }
@@ -125,20 +130,8 @@ function Dashboard() {
 
 
 
-  useEffect(() => {
-    if (currentUser) {
-      fetchChats();
-      fetchUsers();
-      fetchPendingRequests();
-      fetchFriends();
-    }
-  }, [currentUser]);
 
-  useEffect(() => {
-    if (selectedChat) {
-      connectWebSocket();
-    }
-  }, [selectedChat]);
+  
 
   const fetchChats = async () => {
     try {
@@ -306,9 +299,6 @@ function Dashboard() {
         </div>
         <div className="header-right">
           <div className="user-info">
-
-            {console.log(userPictures)}
-            {console.log(currentUser)}
             <img 
               src={userPictures[currentUser.userId] || '/default-profile.png'} 
               alt="Profile" 
@@ -317,7 +307,7 @@ function Dashboard() {
             <span className="welcome-message">Welcome, {currentUser.userName}!</span>
           </div>
           <nav className="header-nav">
-            <Link to="/profile" className="nav-link">Profile</Link>
+            <Link to="/profile" className="nav-link-profile">Profile</Link>
             <Link to="/login" className="nav-link" onClick={handleLogout}>
               <button className="logout-btn">Logout</button>
             </Link>
@@ -412,7 +402,7 @@ function Dashboard() {
                   <li key={user.id} className="user-item">
                     <div className="user-avatar">
                       <img
-                        src={userPictures[user.id] || '/default-profile.png'}
+                        src={userPictures[user.id] == undefined || 'http://localhost:8080/images/basic/basic.png'}
                         alt={`${user.userName}'s profile`}
                       />
                     </div>
@@ -574,7 +564,7 @@ function Dashboard() {
                         key={index} 
                         className={`message ${message.sender === currentUser.userName ? 'sent' : 'received'}`}
                       >
-                        <div className="message-content">
+                        <div className="message-content" style={{alignItems:message.sender === currentUser.userName?"end":"start"}}>
                           {message.sender !== currentUser.userName && (
                             <span className="sender-name">{message.sender}</span>
                           )}

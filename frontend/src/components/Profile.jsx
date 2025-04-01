@@ -3,7 +3,6 @@ import authService from '../services/authService';
 import { useNavigate } from 'react-router-dom';
 import "./Picture.css"; // Import your CSS file for styling
 
-
 function Profile() {
   const [userData, setUserData] = useState({
     userName: '',
@@ -47,7 +46,6 @@ function Profile() {
       try {
         if (userId) {
           const response = await authService.getUserProfilePicture(userId);
-          console.log(response.data);
           if (response.data.hasPicture) {
             setProfilePictureUrl(response.data.picturePath);
           }
@@ -74,7 +72,6 @@ function Profile() {
     try {
       const response = await authService.uploadProfilePicture(userId, profilePicture);
       alert('Profile picture uploaded successfully!');
-      console.log(response.data);
       setProfilePictureUrl(response.data.fullPath);
       setProfilePicture(null);
     } catch (error) {
@@ -138,7 +135,6 @@ function Profile() {
       
 
       <div className="profile-picture-container">
-        {console.log(profilePictureUrl)}
         {profilePictureUrl && (
           <img
             src={`http://localhost:8080${profilePictureUrl}`} // Helyes elérési útvonal
