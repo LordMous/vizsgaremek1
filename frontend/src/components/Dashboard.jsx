@@ -223,10 +223,8 @@ useEffect(() => {
     try {
       // Ellenőrizzük, hogy van-e már chat a baráttal
       const existingChat = chatDetails.find(chat =>
-        //console.log(chat)
         (chat.user1Name === currentUser.userName && chat.user2Name === friend.contactUserName) ||
         (chat.user2Name === currentUser.userName && chat.user1Name === friend.contactUserName)   
-         
       );
   
       if (existingChat) {
