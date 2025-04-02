@@ -40,7 +40,7 @@ public class AuthController {
 
         // Regisztráció
         UserRead userRead = userService.registerUser(userSave);
-
+        
         return ResponseEntity.ok(userRead);
     }
 
