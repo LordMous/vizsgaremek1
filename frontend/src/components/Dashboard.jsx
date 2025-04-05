@@ -9,6 +9,7 @@ function Dashboard() {
 
   let navigate = useNavigate()
   const messageRef = useRef(null)
+  const subscriptionRef = useRef(null);
 
   const [chats, setChats] = useState([]);
   const [selectedChat, setSelectedChat] = useState(null);
@@ -87,6 +88,19 @@ useEffect(() => {
   }, [selectedChat]);
 
   const connectWebSocket = () => {
+
+
+    if (stompClient.current && stompClient.current.connected) {
+      if (subscriptionRef.current) {
+        subscriptionRef.current.unsubscribe(); // Eddigi listener leiratkozása
+      }
+      stompClient.current.disconnect(() => {
+        console.log('WebSocket disconnected');
+      });
+    }
+
+
+
     const socket = new SockJS('http://localhost:8080/ws');
     stompClient.current = Stomp.over(socket);
     console.log('Connecting to WebSocket...');
@@ -211,20 +225,15 @@ useEffect(() => {
     }
   };
 
-  //console.log(chats)
-  //console.log(chatDetails)
-
-
   const handleStartChat = async (friend) => {
-    console.log(currentUser)
-    console.log(friend)
-    console.log("Ra")
 
     try {
       // Ellenőrizzük, hogy van-e már chat a baráttal
+      const friendName = friend.userName === currentUser.userName ? friend.contactUserName : friend.userName;
+
       const existingChat = chatDetails.find(chat =>
-        (chat.user1Name === currentUser.userName && chat.user2Name === friend.contactUserName) ||
-        (chat.user2Name === currentUser.userName && chat.user1Name === friend.contactUserName)   
+        (chat.user1Name === currentUser.userName && chat.user2Name === friendName) ||
+        (chat.user2Name === currentUser.userName && chat.user1Name === friendName)
       );
   
       if (existingChat) {
@@ -580,7 +589,7 @@ useEffect(() => {
                   );
                 })()}
               </div>
-              
+
               <div className="messages-container" id={"messages-container-id"}>
                 {messages.length === 0 ? (
                   <div className="empty-chat">
@@ -612,7 +621,6 @@ useEffect(() => {
                   </ul>
                 )}
               </div>
-              
               <form className="message-form" onSubmit={handleSendMessage}>
                 <input
                   type="text"
