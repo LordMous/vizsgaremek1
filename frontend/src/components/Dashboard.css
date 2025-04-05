@@ -293,18 +293,24 @@ html, body {
     justify-content: center;
   }
 
+  
 /* Responsive Design */
 @media (max-width: 768px) {
   .main-content {
     flex-direction: column;
+    overflow: auto; /* Allow vertical scrolling on smaller screens */
   }
+
   .left-sidebar {
     width: 100%;
-    height: 200px;
-    overflow-x: auto;
-    white-space: nowrap;
+    height: auto; /* Let it expand based on content */
+    max-height: 40vh; /* Optional: keep it from taking too much space */
+    overflow-y: auto;
+    overflow-x: hidden;
   }
+
   .chat-area {
     flex: 1;
+    min-height: 60vh; /* Ensures visible chat area after sidebar */
   }
 }
