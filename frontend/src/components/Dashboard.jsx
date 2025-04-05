@@ -153,20 +153,6 @@ useEffect(() => {
     }
   };
 
-
-
-
-  
-
-  const fetchChats = async () => {
-    try {
-      const response = await authService.getChats();
-      setChats(response.data);
-    } catch (error) {
-      console.error('Error fetching chats', error);
-    }
-  };
-
   const handleLogout = (e) => {
     e.stopPropagation()  
     sessionStorage.removeItem('token');
