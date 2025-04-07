@@ -21,6 +21,7 @@ function Dashboard() {
   const [users, setUsers] = useState([]);
   const [pendingRequests, setPendingRequests] = useState([]);
   const [friends, setFriends] = useState([]);
+  const [blockedUsers, setBlockedUsers] = useState([]);
   const stompClient = useRef(null);
   const [userPictures, setUserPictures] = useState({});
   
@@ -40,6 +41,7 @@ function Dashboard() {
       fetchUsers();
       fetchPendingRequests();
       fetchFriends();
+      fetchBlocked();
       valami();
     }
   }, [currentUser]);
@@ -168,10 +170,19 @@ useEffect(() => {
     }
   };
 
+  const  deleteContact = async (contactUserId)=>{
+      try {
+        const response = await authService.deleteContact( contactUserId,currentUser.userId);
+        alert('Friend unblocked!');
+        fetchUsers();
+      }catch (error) {
+        console.error('Error deleting contact', error);
+      }
+  }
+
   const fetchPendingRequests = async () => {
     try {
       const response = await authService.getContactsByStatus('PENDING');
-      
       setPendingRequests(response.data);
     } catch (error) {
       console.error('Error fetching pending requests', error);
@@ -186,6 +197,16 @@ useEffect(() => {
       console.error('Error fetching friends', error);
     }
   };
+
+  const fetchBlocked = async () => {
+    try {
+      const response = await authService.getContactsByStatus('BLOCKED');
+      setBlockedUsers(response.data);
+    } catch (error) {
+      console.error('Error fetching blocked users', error);
+    }
+
+  }
 
   const handleAddFriend = async (contactUserId) => {
     try {
@@ -296,15 +317,17 @@ useEffect(() => {
       await authService.updateContactStatus(userId, contactUserId, status);
       fetchPendingRequests();
       fetchFriends();
+      fetchBlocked();
     } catch (error) {
       console.error('Error updating contact status', error);
     }
   };
 
+  const notificationBadgeLenght = pendingRequests.filter(contact => contact.contactUserName === currentUser.userName).length
+
   if (!currentUser) {
     return <div>Please log in to view your dashboard.</div>;
   }
-
   return (
     <div className="dashboard-container">
       {/* Header */}
@@ -358,8 +381,9 @@ useEffect(() => {
           onClick={() => setActiveTab('pending')}
         >
           <span className="button-span">Pending Requests 
-          {pendingRequests.length > 0 && (
-            <span className="notification-badge">{pendingRequests.length}</span>
+          {notificationBadgeLenght > 0 && (
+            
+            <span className="notification-badge">{notificationBadgeLenght}</span>
           )}
           </span>
           
@@ -426,16 +450,21 @@ useEffect(() => {
                   <li key={user.id} className="user-item">
                     <div className="user-avatar">
                       <img
-                        src={userPictures[user.id] == undefined || 'http://localhost:8080/images/basic/basic.png'}
+                        src={userPictures[user.id] || 'http://localhost:8080/images/basic/basic.png'}
                         alt={`${user.userName}'s profile`}
                       />
                     </div>
                     <div className="user-info1">
                       <span className="user-name">{user.userName}</span>
-                      {friends.some(friend => friend.contactUserId === user.id || friend.userId === user.id) ? (
-                        <span className="friend-status">
-                          Friends
-                        </span>
+                      {blockedUsers.some(blocked => blocked.userId === user.id || blocked.contactUserId === user.id) ? (
+                        <span onClick={()=>{
+                          
+                          deleteContact(user.id)
+                        }} className="blocked">Blocked</span>
+                      ) : friends.some(friend => friend.contactUserId === user.id || friend.userId === user.id) ? (
+                        <span className="friend-status">Friends</span>
+                      ) : pendingRequests.some(request => request.contactUserId === user.id) ? (
+                        <span className="pending">Pending</span>
                       ) : (
                         <button 
                           className="add-friend-btn"
@@ -457,26 +486,26 @@ useEffect(() => {
               <ul className="pending-list">
                 {pendingRequests.map(request => (
                   <li key={request.id} className="request-item">
-                    {request.userName === currentUser.userName && (
+                    {request.contactUserName === currentUser.userName && (
                       <>
                         <div className="request-avatar">
                           <img
-                            src={userPictures[request.contactUserId] || '/default-profile.png'}
+                            src={userPictures[request.userId] || '/default-profile.png'}
                             alt={`${request.contactUserName}'s profile`}
                           />
                         </div>
                         <div className="request-info">
-                          <span className="request-name">{request.contactUserName}</span>
+                          <span className="request-name">{request.userName}</span>
                           <div className="request-actions">
                             <button 
                               className="accept-btn"
-                              onClick={() => handleUpdateStatus(request.contactUserId, currentUser.userId, 'ACCEPTED')}
+                              onClick={() => handleUpdateStatus( currentUser.userId,request.userId, 'ACCEPTED')}
                             >
                               Accept
                             </button>
                             <button 
                               className="reject-btn"
-                              onClick={() => handleUpdateStatus(request.contactUserId, currentUser.id, 'BLOCKED')}
+                              onClick={() => handleUpdateStatus( currentUser.userId,request.userId, 'BLOCKED')}
                             >
                               Reject
                             </button>
@@ -521,6 +550,7 @@ useEffect(() => {
                         </button>
                         <button
                           className="delete-btn"
+                          style={{backgroundColor:"red", color:"white"}}
                           onClick={() => handleDeleteFriend(friend)}
                         >
                           Remove
@@ -567,6 +597,7 @@ useEffect(() => {
                       </div>
                       <button
                         className="delete-chat-btn"
+                        style={{backgroundColor:"red", color:"white"}}
                         onClick={() => handleDeleteChat(selectedChat.id)}
                       >
                         Delete Chat

@@ -120,11 +120,21 @@ html, body {
   background: #f0f2f5;
 }
 
+.blocked{
+  margin-left: 15px;
+  color: red;
+}
+
 /* Chat List */
 .chat-list, .user-list, .pending-list, .friends-list {
   list-style: none;
   padding: 0;
   margin: 0;
+}
+
+.pending{
+  margin-left: 15px;
+  color: orange;
 }
 
 .chat-item, .user-item, .request-item, .friend-item {
@@ -293,6 +303,9 @@ html, body {
     justify-content: center;
   }
 
+  .delete-btn {
+    margin-left: 15px;
+  }
   
 /* Responsive Design */
 @media (max-width: 768px) {
@@ -300,7 +313,20 @@ html, body {
     flex-direction: column;
     overflow: auto; /* Allow vertical scrolling on smaller screens */
   }
-
+  .chat-header{
+    border-top: black 1px solid;
+  }
+  .chat-area {
+    flex: 1;
+    min-height: 60vh; /* Ensures visible chat area after sidebar */
+  }
+  .left-sidebar {
+    width: 100%;
+    height: auto; /* Let it expand based on content */
+    max-height: 40vh; /* Optional: keep it from taking too much space */
+    overflow-y: auto;
+    overflow-x: hidden;
+  } 
   .left-sidebar {
     width: 100%;
     height: auto; /* Let it expand based on content */

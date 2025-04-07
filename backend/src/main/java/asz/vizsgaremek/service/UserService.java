@@ -96,7 +96,7 @@ public class UserService {
         user.setUserName(userSave.getUserName());
         user.setPassword(passwordEncoder.encode(userSave.getPassword())); // Jelszó titkosítás
         user.setPhoneNumber(userSave.getPhoneNumber());
-
+        user.setPicture("/images/basic/basic.png");
         User createdUser = repository.save(user);
 
         // Átalakítás UserRead-re

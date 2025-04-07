@@ -82,6 +82,7 @@ public class UserController {
 
 
     @GetMapping("/{userId}/picture")
+    @Operation(summary = "Read a picture of a selected user")
     public ResponseEntity<?> getUserPicture(@PathVariable Integer userId) {
         String picturePath = service.getUserPicturePath(userId);
 
