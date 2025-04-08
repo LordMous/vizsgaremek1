@@ -28,6 +28,18 @@ function Register() {
         <p className="welcome">Join our community</p>
         
         <form onSubmit={handleSubmit}>
+
+          <div className="form-group">
+            <label>Username</label>
+            <input 
+              type="text" 
+              value={userName} 
+              onChange={(e) => setUserName(e.target.value)} 
+              required 
+              placeholder="Choose a username"
+            />
+          </div>
+
           <div className="form-group">
             <label>Email address</label>
             <input 
@@ -47,17 +59,6 @@ function Register() {
               onChange={(e) => setPassword(e.target.value)} 
               required 
               placeholder="Create a password"
-            />
-          </div>
-          
-          <div className="form-group">
-            <label>Username</label>
-            <input 
-              type="text" 
-              value={userName} 
-              onChange={(e) => setUserName(e.target.value)} 
-              required 
-              placeholder="Choose a username"
             />
           </div>
           

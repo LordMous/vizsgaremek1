@@ -4,6 +4,7 @@ import asz.vizsgaremek.converter.UserConverter;
 import asz.vizsgaremek.dto.user.LoginResponseDTO;
 import asz.vizsgaremek.dto.user.UserRead;
 import asz.vizsgaremek.dto.user.UserSave;
+import asz.vizsgaremek.enums.Role;
 import asz.vizsgaremek.model.User;
 import asz.vizsgaremek.service.UserService;
 import lombok.Getter;
@@ -50,49 +51,16 @@ public class AuthController {
         return ResponseEntity.ok(userRead);
     }
 
-
-    /*
-    LoginResponseDTO response = new LoginResponseDTO();
-            response.setToken(token);  // Token generálása
-            response.setUserId(user.getId());
-     */
-
-
-
-
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest request) {
         User user = userService.findByEmail(request.getEmail());
         if (user != null && user.getPassword().equals(request.getPassword()) || user != null && passwordEncoder.matches(request.getPassword(), user.getPassword())) {
             String token = jwtUtil.generateToken(user.getUserName());
-
-            System.out.println(token);
-            return ResponseEntity.ok(new AuthResponse(token,user.getId()));
+            return ResponseEntity.ok(new AuthResponse(token,user.getId(),user.getRole()));
         }
         return ResponseEntity.status(401).body("Hibás email vagy jelszó!");
     }
 
-    @GetMapping("/dashboard")
-    public ResponseEntity<?> dashboard(@RequestHeader("Authorization") String authHeader) {
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid token format");
-        }
-
-        String token = authHeader.substring(7);  // A "Bearer " előtag eltávolítása
-        System.out.println("Received token: " + token);  // Token naplózása
-
-        try {
-            String username = jwtUtil.extractUsername(token);
-            if (username == null || !jwtUtil.validateToken(token, username)) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid or expired token");
-            }
-
-            return ResponseEntity.ok("Welcome to the dashboard, " + username);
-        } catch (Exception e) {
-            System.err.println("Token processing failed: " + e.getMessage());  // Hiba naplózása
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Token processing failed: " + e.getMessage());
-        }
-    }
 }
 
 class LoginRequest {
@@ -125,9 +93,10 @@ class RegisterRequest {
 class AuthResponse {
     private String token;
     private Integer userId;
-
-    public AuthResponse(String token, Integer userId) {
+    private Role role;
+    public AuthResponse(String token, Integer userId, Role role) {
         this.token = token;
         this.userId = userId;
+        this.role = role;
     }
 }

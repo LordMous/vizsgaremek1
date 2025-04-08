@@ -14,14 +14,18 @@ function Login() {
     e.preventDefault();
     try {
       const response = await authService.login({ email, password });
+      console.log(response.data.role);
       if (rememberMe) {
-        localStorage.setItem('token', response.data.token);
-        localStorage.setItem('userId', response.data.userId);
+        sessionStorage.setItem('token', response.data.token);
+        sessionStorage.setItem('userId', response.data.userId);
+        sessionStorage.setItem('role', response.data.role);
       } else {
         sessionStorage.setItem('token', response.data.token);
         sessionStorage.setItem('userId', response.data.userId);
+        sessionStorage.setItem('role', response.data.role);
       }
       navigate('/dashboard');
+      console.log()
     } catch (error) {
       alert('Invalid email or password');
     }

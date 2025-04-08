@@ -5,6 +5,7 @@ import asz.vizsgaremek.converter.UserConverter;
 import asz.vizsgaremek.dto.user.PictureRead;
 import asz.vizsgaremek.dto.user.UserRead;
 import asz.vizsgaremek.dto.user.UserSave;
+import asz.vizsgaremek.enums.Role;
 import asz.vizsgaremek.exception.UserNotFoundException;
 import asz.vizsgaremek.model.User;
 import asz.vizsgaremek.repository.UserRepository;
@@ -97,6 +98,7 @@ public class UserService {
         user.setPassword(passwordEncoder.encode(userSave.getPassword())); // Jelszó titkosítás
         user.setPhoneNumber(userSave.getPhoneNumber());
         user.setPicture("/images/basic/basic.png");
+        user.setRole(Role.USER);
         User createdUser = repository.save(user);
 
         // Átalakítás UserRead-re

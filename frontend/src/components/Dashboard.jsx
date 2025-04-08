@@ -445,6 +445,13 @@ useEffect(() => {
           {activeTab === 'contacts' && (
             <div className="user-list-container">
               <h2>All Users</h2>
+          {currentUser.role == "ADMIN" && (
+            <>
+              <h4 onClick={()=>{
+                navigate("/admin")
+              }}>Manage users</h4>
+            </>
+          )}
               <ul className="user-list">
                 {users.map(user => (
                   <li key={user.id} className="user-item">

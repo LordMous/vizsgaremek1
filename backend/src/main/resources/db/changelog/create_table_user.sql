@@ -3,7 +3,8 @@ create table user (
     email           varchar(50)     not null UNIQUE ,
     age             int             not null  ,
     username        varchar(30)     not null UNIQUE,
-    password        varchar(255)     not null,
+    password        varchar(255)    not null,
     phonenumber     varchar(13)     not null,
-    picture         varchar(255)
+    picture         varchar(255),
+    role            varchar(20)     not null default 'USER'
 );

@@ -84,6 +84,16 @@ html, body {
   overflow: hidden; /* Megakadályozza a görgetési problémákat */
 }
 
+.no-chat-selected {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex: 1;
+  font-size: 20px;
+  color: #888;
+  flex-direction: column;
+}
+
 .left-sidebar {
   width: 300px;
   background: white;

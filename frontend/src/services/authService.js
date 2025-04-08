@@ -70,12 +70,13 @@ const addContact = (userId, contactUserId) => {
 const getCurrentUser = () => {
   const token = sessionStorage.getItem('token'); // localStorage helyett sessionStorage
   const userId = sessionStorage.getItem('userId');
-
+  const role = sessionStorage.getItem('role');
   if (!token) return null;
   const payload = JSON.parse(atob(token.split('.')[1]));
   return {
     userName: payload.sub,
     userId: userId,
+    role: role,
   };
 };
 
