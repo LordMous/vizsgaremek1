@@ -2,10 +2,15 @@ import React, { useEffect, useState, useRef } from 'react';
 import { Stomp } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
 import authService from '../services/authService';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import './Dashboard.css'
 
 function Dashboard() {
+
+  let navigate = useNavigate()
+  const messageRef = useRef(null)
+  const subscriptionRef = useRef(null);
+
   const [chats, setChats] = useState([]);
   const [selectedChat, setSelectedChat] = useState(null);
   const [messages, setMessages] = useState([]);
@@ -16,6 +21,7 @@ function Dashboard() {
   const [users, setUsers] = useState([]);
   const [pendingRequests, setPendingRequests] = useState([]);
   const [friends, setFriends] = useState([]);
+  const [blockedUsers, setBlockedUsers] = useState([]);
   const stompClient = useRef(null);
   const [userPictures, setUserPictures] = useState({});
   
@@ -35,9 +41,18 @@ function Dashboard() {
       fetchUsers();
       fetchPendingRequests();
       fetchFriends();
+      fetchBlocked();
       valami();
     }
   }, [currentUser]);
+
+  const lastMessageRef = useRef(null);
+
+useEffect(() => {
+  if (lastMessageRef.current) {
+    lastMessageRef.current.scrollIntoView();
+  }
+}, [messages]);
 
 
   useEffect(() => {
@@ -72,10 +87,22 @@ function Dashboard() {
     if (selectedChat) {
       connectWebSocket();
     }
-    
   }, [selectedChat]);
 
   const connectWebSocket = () => {
+
+
+    if (stompClient.current && stompClient.current.connected) {
+      if (subscriptionRef.current) {
+        subscriptionRef.current.unsubscribe(); // Eddigi listener leiratkozása
+      }
+      stompClient.current.disconnect(() => {
+        console.log('WebSocket disconnected');
+      });
+    }
+
+
+
     const socket = new SockJS('http://localhost:8080/ws');
     stompClient.current = Stomp.over(socket);
     console.log('Connecting to WebSocket...');
@@ -128,21 +155,8 @@ function Dashboard() {
     }
   };
 
-
-
-
-  
-
-  const fetchChats = async () => {
-    try {
-      const response = await authService.getChats();
-      setChats(response.data);
-    } catch (error) {
-      console.error('Error fetching chats', error);
-    }
-  };
-
-  const handleLogout = () => {
+  const handleLogout = (e) => {
+    e.stopPropagation()  
     sessionStorage.removeItem('token');
     sessionStorage.removeItem('userId');
   };
@@ -156,10 +170,19 @@ function Dashboard() {
     }
   };
 
+  const  deleteContact = async (contactUserId)=>{
+      try {
+        const response = await authService.deleteContact( contactUserId,currentUser.userId);
+        alert('Friend unblocked!');
+        fetchUsers();
+      }catch (error) {
+        console.error('Error deleting contact', error);
+      }
+  }
+
   const fetchPendingRequests = async () => {
     try {
       const response = await authService.getContactsByStatus('PENDING');
-      
       setPendingRequests(response.data);
     } catch (error) {
       console.error('Error fetching pending requests', error);
@@ -174,6 +197,16 @@ function Dashboard() {
       console.error('Error fetching friends', error);
     }
   };
+
+  const fetchBlocked = async () => {
+    try {
+      const response = await authService.getContactsByStatus('BLOCKED');
+      setBlockedUsers(response.data);
+    } catch (error) {
+      console.error('Error fetching blocked users', error);
+    }
+
+  }
 
   const handleAddFriend = async (contactUserId) => {
     try {
@@ -200,11 +233,14 @@ function Dashboard() {
   };
 
   const handleStartChat = async (friend) => {
+
     try {
       // Ellenőrizzük, hogy van-e már chat a baráttal
-      const existingChat = chats.find(chat =>
-        (chat.user1Id === currentUser.userId && chat.user2Id === friend.contactUserId) ||
-        (chat.user2Id === currentUser.userId && chat.user1Id === friend.contactUserId)
+      const friendName = friend.userName === currentUser.userName ? friend.contactUserName : friend.userName;
+
+      const existingChat = chatDetails.find(chat =>
+        (chat.user1Name === currentUser.userName && chat.user2Name === friendName) ||
+        (chat.user2Name === currentUser.userName && chat.user1Name === friendName)
       );
   
       if (existingChat) {
@@ -281,15 +317,17 @@ function Dashboard() {
       await authService.updateContactStatus(userId, contactUserId, status);
       fetchPendingRequests();
       fetchFriends();
+      fetchBlocked();
     } catch (error) {
       console.error('Error updating contact status', error);
     }
   };
 
+  const notificationBadgeLenght = pendingRequests.filter(contact => contact.contactUserName === currentUser.userName).length
+
   if (!currentUser) {
     return <div>Please log in to view your dashboard.</div>;
   }
-
   return (
     <div className="dashboard-container">
       {/* Header */}
@@ -298,19 +336,28 @@ function Dashboard() {
           <h1 className="app-title">ChatApp</h1>
         </div>
         <div className="header-right">
-          <div className="user-info">
+          <div className="user-info" onClick={() => {
+            navigate("/profile")
+          }}>
             <img 
               src={userPictures[currentUser.userId] || '/default-profile.png'} 
               alt="Profile" 
               className="profile-pic-small"
             />
-            <span className="welcome-message">Welcome, {currentUser.userName}!</span>
+            <div className="right-side">
+              <span className="welcome-message">Welcome, {currentUser.userName}!</span>
+              <div className="logout-wrapper">
+                <Link to="/login" className="nav-link" onClick={handleLogout}>
+                  <button className="logout-btn">Logout</button>
+                </Link>
+              </div>
+            </div>
           </div>
           <nav className="header-nav">
-            <Link to="/profile" className="nav-link-profile">Profile</Link>
-            <Link to="/login" className="nav-link" onClick={handleLogout}>
+            {/* <Link to="/profile" className="nav-link-profile">Profile</Link> */}
+            {/* <Link to="/login" className="nav-link" onClick={handleLogout}>
               <button className="logout-btn">Logout</button>
-            </Link>
+            </Link> */}
           </nav>
         </div>
       </header>
@@ -334,8 +381,9 @@ function Dashboard() {
           onClick={() => setActiveTab('pending')}
         >
           <span className="button-span">Pending Requests 
-          {pendingRequests.length > 0 && (
-            <span className="notification-badge">{pendingRequests.length}</span>
+          {notificationBadgeLenght > 0 && (
+            
+            <span className="notification-badge">{notificationBadgeLenght}</span>
           )}
           </span>
           
@@ -402,16 +450,21 @@ function Dashboard() {
                   <li key={user.id} className="user-item">
                     <div className="user-avatar">
                       <img
-                        src={userPictures[user.id] == undefined || 'http://localhost:8080/images/basic/basic.png'}
+                        src={userPictures[user.id] || 'http://localhost:8080/images/basic/basic.png'}
                         alt={`${user.userName}'s profile`}
                       />
                     </div>
-                    <div className="user-info">
+                    <div className="user-info1">
                       <span className="user-name">{user.userName}</span>
-                      {friends.some(friend => friend.contactUserId === user.id || friend.userId === user.id) ? (
-                        <span className="friend-status">
-                          Friends
-                        </span>
+                      {blockedUsers.some(blocked => blocked.userId === user.id || blocked.contactUserId === user.id) ? (
+                        <span onClick={()=>{
+                          
+                          deleteContact(user.id)
+                        }} className="blocked">Blocked</span>
+                      ) : friends.some(friend => friend.contactUserId === user.id || friend.userId === user.id) ? (
+                        <span className="friend-status">Friends</span>
+                      ) : pendingRequests.some(request => request.contactUserId === user.id) ? (
+                        <span className="pending">Pending</span>
                       ) : (
                         <button 
                           className="add-friend-btn"
@@ -433,26 +486,26 @@ function Dashboard() {
               <ul className="pending-list">
                 {pendingRequests.map(request => (
                   <li key={request.id} className="request-item">
-                    {request.userName === currentUser.userName && (
+                    {request.contactUserName === currentUser.userName && (
                       <>
                         <div className="request-avatar">
                           <img
-                            src={userPictures[request.contactUserId] || '/default-profile.png'}
+                            src={userPictures[request.userId] || '/default-profile.png'}
                             alt={`${request.contactUserName}'s profile`}
                           />
                         </div>
                         <div className="request-info">
-                          <span className="request-name">{request.contactUserName}</span>
+                          <span className="request-name">{request.userName}</span>
                           <div className="request-actions">
                             <button 
                               className="accept-btn"
-                              onClick={() => handleUpdateStatus(request.contactUserId, currentUser.userId, 'ACCEPTED')}
+                              onClick={() => handleUpdateStatus( currentUser.userId,request.userId, 'ACCEPTED')}
                             >
                               Accept
                             </button>
                             <button 
                               className="reject-btn"
-                              onClick={() => handleUpdateStatus(request.contactUserId, currentUser.id, 'BLOCKED')}
+                              onClick={() => handleUpdateStatus( currentUser.userId,request.userId, 'BLOCKED')}
                             >
                               Reject
                             </button>
@@ -497,6 +550,7 @@ function Dashboard() {
                         </button>
                         <button
                           className="delete-btn"
+                          style={{backgroundColor:"red", color:"white"}}
                           onClick={() => handleDeleteFriend(friend)}
                         >
                           Remove
@@ -543,6 +597,7 @@ function Dashboard() {
                       </div>
                       <button
                         className="delete-chat-btn"
+                        style={{backgroundColor:"red", color:"white"}}
                         onClick={() => handleDeleteChat(selectedChat.id)}
                       >
                         Delete Chat
@@ -551,18 +606,21 @@ function Dashboard() {
                   );
                 })()}
               </div>
-              
-              <div className="messages-container">
+
+              <div className="messages-container" id={"messages-container-id"}>
                 {messages.length === 0 ? (
                   <div className="empty-chat">
                     <p>No messages yet. Start the conversation!</p>
                   </div>
                 ) : (
-                  <ul className="messages-list">
+                  <ul className="messages-list" id="messages-list-id" ref={messageRef}>
                     {messages.map((message, index) => (
                       <li 
                         key={index} 
-                        className={`message ${message.sender === currentUser.userName ? 'sent' : 'received'}`}
+                        className={`message ${message.sender === currentUser.userName ? 'sent' : 'received'}`
+                      }
+                      ref={index === messages.length -1 ? lastMessageRef : null}
+
                       >
                         <div className="message-content" style={{alignItems:message.sender === currentUser.userName?"end":"start"}}>
                           {message.sender !== currentUser.userName && (
@@ -580,7 +638,6 @@ function Dashboard() {
                   </ul>
                 )}
               </div>
-              
               <form className="message-form" onSubmit={handleSendMessage}>
                 <input
                   type="text"

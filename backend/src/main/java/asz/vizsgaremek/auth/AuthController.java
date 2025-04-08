@@ -10,6 +10,7 @@ import lombok.Getter;
 import lombok.Setter;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -20,10 +21,13 @@ import java.util.List;
 public class AuthController {
     private final JwtUtil jwtUtil;
     private final UserService userService;
+    private final PasswordEncoder passwordEncoder;
 
-    public AuthController(JwtUtil jwtUtil, UserService userService) {
+
+    public AuthController(JwtUtil jwtUtil, UserService userService, PasswordEncoder passwordEncoder) {
         this.jwtUtil = jwtUtil;
         this.userService = userService;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @PostMapping("/register")
@@ -34,6 +38,8 @@ public class AuthController {
         user.setUserName(registerRequest.getUserName());
         user.setPassword(registerRequest.getPassword());
         user.setPhoneNumber(registerRequest.getPhoneNumber());
+
+        user.setPicture("/images/basic/basic.png");
 
         // Átalakítás UserSave-re
         UserSave userSave = UserConverter.convertModelToSave(user);
@@ -57,10 +63,10 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest request) {
         User user = userService.findByEmail(request.getEmail());
-
-        if (user != null && user.getPassword().equals(request.getPassword())) {
+        if (user != null && user.getPassword().equals(request.getPassword()) || user != null && passwordEncoder.matches(request.getPassword(), user.getPassword())) {
             String token = jwtUtil.generateToken(user.getUserName());
 
+            System.out.println(token);
             return ResponseEntity.ok(new AuthResponse(token,user.getId()));
         }
         return ResponseEntity.status(401).body("Hibás email vagy jelszó!");
