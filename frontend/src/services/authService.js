@@ -112,6 +112,10 @@ const getUserProfilePicture = (userId) => {
   return axios.get(`${API_URL}/user/${userId}/picture`, getAuthHeaders());
 }
 
+const deleteUser = (userId) => {
+  return axios.delete(`${API_URL}/user/${userId}`, getAuthHeaders());
+}
+
 
 export default {
   register,
@@ -132,4 +136,5 @@ export default {
   deleteChat,
   uploadProfilePicture,
   getUserProfilePicture,
+  deleteUser,
 };

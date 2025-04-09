@@ -87,11 +87,6 @@
     transform: translateY(-1px);
   }
   
-  /* Profile View Mode */
-  .profile-view {
-    /* padding: 1rem; */
-  }
-  
   .profile-view p {
     font-size: 1.1rem;
     margin-bottom: 1rem;

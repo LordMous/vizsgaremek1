@@ -8,6 +8,7 @@ import asz.vizsgaremek.dto.user.UserSave;
 import asz.vizsgaremek.enums.Role;
 import asz.vizsgaremek.exception.UserNotFoundException;
 import asz.vizsgaremek.model.User;
+import asz.vizsgaremek.repository.ContactRepository;
 import asz.vizsgaremek.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
@@ -35,6 +36,11 @@ public class UserService {
 
     @Autowired
     private UserRepository repository;
+
+    @Autowired
+    private ContactRepository contactRepository;
+
+
 
     @Autowired
     private JwtUtil jwtUtil;
@@ -65,6 +71,7 @@ public class UserService {
     public UserRead deleteUser(int id) {
         throwExceptionIfUserNotFound(id);
         User deletedUser = repository.getReferenceById(id);
+        contactRepository.deleteContactByUserId(deletedUser.getId());
         repository.delete(deletedUser);
         return UserConverter.convertModelToRead(deletedUser);
     }
