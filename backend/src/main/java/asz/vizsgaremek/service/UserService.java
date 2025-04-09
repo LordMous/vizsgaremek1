@@ -89,6 +89,11 @@ public class UserService {
                 .orElseThrow(UserNotFoundException::new);
     }
 
+    public User findByUsername(String username) {
+        return repository.findByUserName(username)
+                .orElseThrow(UserNotFoundException::new);
+    }
+
     // Regisztráció (jelszó titkosításával)
     public UserRead registerUser(UserSave userSave) {
         User user = new User();

@@ -15,6 +15,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.annotation.Secured;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -30,6 +35,7 @@ import java.util.Map;
         type = SecuritySchemeType.HTTP,
         in = SecuritySchemeIn.HEADER
 )
+
 @CrossOrigin("http://localhost:5173")
 public class UserController {
 
@@ -41,6 +47,15 @@ public class UserController {
     @Operation(summary = "List of users",description = "List of users")
     public List<UserRead> listAllUsers() {
         return service.getAllUsers();
+    }
+
+    @CrossOrigin(origins = "http://localhost:5173")
+    @DeleteMapping()
+    @Operation(summary = "Delete self")
+    public UserRead deleteSelf(){
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String username = auth.getName();
+        return service.deleteUser(service.findByUsername(username).getId());
     }
 
     @CrossOrigin(origins = "http://localhost:5173")
@@ -65,12 +80,6 @@ public class UserController {
     }
 
 
-    @CrossOrigin(origins = "http://localhost:5173")
-    @DeleteMapping("/{id}")
-    @Operation(summary = "Delete selected user")
-    public UserRead deleteUser(@PathVariable int id) {
-        return service.deleteUser(id);
-    }
 
 
     @CrossOrigin(origins = "http://localhost:5173")
@@ -94,5 +103,13 @@ public class UserController {
                 "hasPicture", true,
                 "picturePath", picturePath
         ));
+    }
+
+    @Secured("ADMIN")
+    @CrossOrigin(origins = "http://localhost:5173")
+    @DeleteMapping("/{id}")
+    @Operation(summary = "Delete selected user")
+    public UserRead deleteUser(@PathVariable int id) {
+        return service.deleteUser(id);
     }
 }
