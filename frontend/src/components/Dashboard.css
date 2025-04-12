@@ -54,6 +54,15 @@ html, body {
   cursor: pointer;
 }
 
+.admin-btn{
+  background-color: green;
+  color: white;
+  padding: 3px 6px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
 /* Navigation Tabs */
 .tab-navigation {
   display: flex;
@@ -192,13 +201,14 @@ html, body {
 }
 
 .logout-wrapper {
+  gap: 10px;
   display: flex;
   justify-content: right;
 }
 
 .welcome-message {
   display: flex;
-
+  color: white;
 }
 
 .header-nav {
@@ -337,13 +347,6 @@ html, body {
     overflow-y: auto;
     overflow-x: hidden;
   } 
-  .left-sidebar {
-    width: 100%;
-    height: auto; /* Let it expand based on content */
-    max-height: 40vh; /* Optional: keep it from taking too much space */
-    overflow-y: auto;
-    overflow-x: hidden;
-  }
 
   .chat-area {
     flex: 1;

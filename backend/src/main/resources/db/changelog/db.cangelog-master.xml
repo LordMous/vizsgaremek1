@@ -11,7 +11,7 @@
     <include file="/db/changelog/create_table_message.sql"/>
     <include file="/db/changelog/create_table_img.sql"/>
     <include file="/db/changelog/create_table_contact.sql"/>
-
+    <include file="db/changelog/create_table_announcement.sql"/>
 
     <include file="db/changelog/insert_dummy_user.sql"/>
     <include file="db/changelog/insert_dummy_chat.sql"/>

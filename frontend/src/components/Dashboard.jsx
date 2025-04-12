@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, use } from 'react';
 import { Stomp } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
 import authService from '../services/authService';
@@ -347,6 +347,17 @@ useEffect(() => {
             <div className="right-side">
               <span className="welcome-message">Welcome, {currentUser.userName}!</span>
               <div className="logout-wrapper">
+                {currentUser.role == "ADMIN" && (
+                  <>
+                    <Link to={"/admin"} className="nav-link" onClick={(e) => {
+                        navigate("/admin")
+                        e.stopPropagation()
+                      }}>
+                        <button className="admin-btn">Admin</button>
+                    </Link>
+                  </>
+                )}
+                
                 <Link to="/login" className="nav-link" onClick={handleLogout}>
                   <button className="logout-btn">Logout</button>
                 </Link>
@@ -445,13 +456,6 @@ useEffect(() => {
           {activeTab === 'contacts' && (
             <div className="user-list-container">
               <h2>All Users</h2>
-          {currentUser.role == "ADMIN" && (
-            <>
-              <h4 onClick={()=>{
-                navigate("/admin")
-              }}>Manage users</h4>
-            </>
-          )}
               <ul className="user-list">
                 {users.map(user => (
                   <li key={user.id} className="user-item">
@@ -465,8 +469,11 @@ useEffect(() => {
                       <span className="user-name">{user.userName}</span>
                       {blockedUsers.some(blocked => blocked.userId === user.id || blocked.contactUserId === user.id) ? (
                         <span onClick={()=>{
-                          
-                          deleteContact(user.id)
+                          try{
+                            deleteContact(user.id)
+                          }catch (error) {
+                            console.error('Error deleting contact');
+                          }
                         }} className="blocked">Blocked</span>
                       ) : friends.some(friend => friend.contactUserId === user.id || friend.userId === user.id) ? (
                         <span className="friend-status">Friends</span>

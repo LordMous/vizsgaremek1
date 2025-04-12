@@ -20,6 +20,6 @@ public interface ContactRepository extends JpaRepository<Contact, Integer> {
     @Modifying
     @Transactional
     @Query(nativeQuery = true,
-    value = "DELETE contact co WHERE co.contact_user_id = :user_id")
+    value = "DELETE FROM contact WHERE contact_user_id = :user_id OR user_id = :user_id")
     void deleteContactByUserId(@Param("user_id") Integer user_id);
 }

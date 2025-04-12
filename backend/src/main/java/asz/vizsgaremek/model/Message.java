@@ -33,6 +33,5 @@ public class Message {
     private String messageType; // "text", "image", "video", "file"
     private Timestamp createdAt;
 
-    // Getterek és setterek
 }
 
