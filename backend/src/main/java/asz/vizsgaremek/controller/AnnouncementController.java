@@ -6,6 +6,7 @@ import asz.vizsgaremek.model.Announcement;
 import asz.vizsgaremek.model.User;
 import asz.vizsgaremek.service.AnnouncementService;
 import asz.vizsgaremek.service.UserService;
+import asz.vizsgaremek.websocket.WebSocketController;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -14,6 +15,9 @@ import java.util.List;
 @RestController
 @RequestMapping("/announcements")
 public class AnnouncementController {
+
+    @Autowired
+    private WebSocketController webSocketController;
 
     private AnnouncementService announcementService;
     private UserService userService;
@@ -41,11 +45,13 @@ public class AnnouncementController {
         User currentUser = userService.getCurrentAuthenticatedUser(); // pl. SecurityContext alapján
         Announcement saved = announcementService.createAnnoucement(requestDTO.getMessage(), currentUser);
 
-        return new AnnouncementResponse(
+        AnnouncementResponse response =  new AnnouncementResponse(
                 saved.getId(),
                 saved.getMessage(),
                 saved.getCreatedAt(),
                 saved.getSender().getUsername()
         );
+        webSocketController.broadcastAnnouncement(response);
+        return response;
     }
 }

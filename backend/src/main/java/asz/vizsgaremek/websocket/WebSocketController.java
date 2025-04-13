@@ -1,5 +1,6 @@
 package asz.vizsgaremek.websocket;
 
+import asz.vizsgaremek.dto.announcement.AnnouncementResponse;
 import asz.vizsgaremek.service.MessageService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.handler.annotation.MessageMapping;
@@ -29,6 +30,10 @@ public class WebSocketController {
     public void sendContactUpdate(String username, String message) {
         // Privát értesítés a kontaktok frissítéséről
         template.convertAndSendToUser(username, "/queue/contacts", message);
+    }
+
+    public void broadcastAnnouncement(AnnouncementResponse response) {
+        template.convertAndSend("/topic/announcements", response);
     }
 
 }

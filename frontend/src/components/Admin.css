@@ -20,6 +20,87 @@ html, body{
     margin-bottom: 10px;
     color: #333;
   }
+
+  .header-sections {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 40px;
+    width: 100%;
+    margin-top: 20px;
+  }
+  
+  .header-section {
+    flex: 1;
+    min-width: 200px;
+    max-width: 300px;
+    background-color: white;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  }
+  
+  .search-input {
+    width: 100%;
+    padding: 8px 12px;
+    font-size: 13px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    margin-bottom: 15px;
+    box-sizing: border-box;
+  }
+
+  .announcement-input {
+    width: 80%;
+    padding: 8px 12px;
+    font-size: 13px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    margin-bottom: 12px;
+    resize: vertical;
+    min-height: 80px;
+  }
+  
+  .post-announcement-button {
+    background-color: #3498db;
+    color: white;
+    border: none;
+    padding: 10px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+  
+  .post-announcement-button:hover {
+    background-color: #2980b9;
+  }
+  
+  .back-button {
+    background-color: #2ecc71;
+    color: white;
+    border: none;
+    padding: 10px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    margin-top: 10px;
+  }
+  
+  .back-button:hover {
+    background-color: #27ae60;
+  }
+  
+  /* Responsive design */
+  @media (max-width: 768px) {
+    .header-sections {
+      flex-direction: column;
+      gap: 20px;
+    }
+    
+    .header-section {
+      max-width: 100%;
+    }
+  }
   
   .admin-header {
     padding-top: 10px;
@@ -36,18 +117,7 @@ html, body{
     margin-bottom: 20px;
   }
   
-  .search-input {
-    text-align: center;
-    justify-content: center;
-    width: 100%;
-    max-width: 500px;
-    padding: 10px 14px;
-    font-size: 14px;
-    border: 1px solid #ccc;
-    border-radius: 8px;
-    margin-bottom: 30px;
-    display: block;
-  }
+ 
   
   .user-list2 {
     display: grid;
@@ -144,4 +214,6 @@ html, body{
       font-size: 13px;
     }
   }
+  
+
   

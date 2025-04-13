@@ -3,6 +3,7 @@ import { Stomp } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
 import authService from '../services/authService';
 import { Link, useNavigate } from 'react-router-dom';
+import CampaignIcon from '@mui/icons-material/Campaign';
 import './Dashboard.css'
 
 function Dashboard() {
@@ -10,7 +11,7 @@ function Dashboard() {
   let navigate = useNavigate()
   const messageRef = useRef(null)
   const subscriptionRef = useRef(null);
-
+  const privateMessageSubscriptionRef = useRef(null);
   const [chats, setChats] = useState([]);
   const [selectedChat, setSelectedChat] = useState(null);
   const [messages, setMessages] = useState([]);
@@ -24,6 +25,7 @@ function Dashboard() {
   const [blockedUsers, setBlockedUsers] = useState([]);
   const stompClient = useRef(null);
   const [userPictures, setUserPictures] = useState({});
+  const [announcements, setAnnouncements] = useState([]);
   
 
   useEffect(() => {
@@ -42,7 +44,18 @@ function Dashboard() {
       fetchPendingRequests();
       fetchFriends();
       fetchBlocked();
+      fetchAnnouncements();
       valami();
+      
+    const socket = new SockJS('http://localhost:8080/ws');
+    stompClient.current = Stomp.over(socket);
+    stompClient.current.connect({}, () => {
+      stompClient.current.subscribe('/topic/announcements', (announcement) => {
+        const data = JSON.parse(announcement.body);
+        console.log('Announcement received:', data);
+        setAnnouncements((prev) => [data, ...prev]); // legfrissebb előre
+      });
+    })
     }
   }, [currentUser]);
 
@@ -84,53 +97,79 @@ useEffect(() => {
   }, [chats]);
 
   useEffect(() => {
-    if (selectedChat) {
+    if (selectedChat && selectedChat.type !== 'announcement') {
       connectWebSocket();
     }
   }, [selectedChat]);
 
   const connectWebSocket = () => {
-
-
-    if (stompClient.current && stompClient.current.connected) {
-      if (subscriptionRef.current) {
-        subscriptionRef.current.unsubscribe(); // Eddigi listener leiratkozása
-      }
-      stompClient.current.disconnect(() => {
-        console.log('WebSocket disconnected');
-      });
-    }
-
-
-
-    const socket = new SockJS('http://localhost:8080/ws');
-    stompClient.current = Stomp.over(socket);
-    console.log('Connecting to WebSocket...');
-    stompClient.current.connect({}, () => {
-      console.log('Connected to WebSocket');
+    if (!stompClient.current || !stompClient.current.connected) {
+      const socket = new SockJS('http://localhost:8080/ws');
+      stompClient.current = Stomp.over(socket);
+      stompClient.current.connect({}, () => {
+        console.log('Connected to WebSocket');
   
-      // Feliratkozás a privát üzenetek csatornájára
-      stompClient.current.subscribe('/user/queue/messages', (message) => {
-        if (message.body) {
-            const receivedMessage = JSON.parse(message.body);
-            // Ellenőrizzük, hogy az üzenet nem üres
-            if (receivedMessage.content && receivedMessage.chatId === selectedChat?.id) {
-                setMessages((prevMessages) => [...prevMessages, {
-                  sender: receivedMessage.sender,
-                  message: receivedMessage.content,
-                  createdAt: new Date(),
-
-                }]);
-              
-              }
+        // Feliratkozás csak akkor, ha még nincs announcement subscription
+        if (!subscriptionRef.current) {
+          subscriptionRef.current = stompClient.current.subscribe('/topic/announcements', (announcement) => {
+            const data = JSON.parse(announcement.body);
+            setAnnouncements((prev) => [data, ...prev]);
+          });
         }
-    });
   
-      // Az aktuális chat üzeneteinek betöltése
+        // Privát üzenetek feliratkozás
+        if (privateMessageSubscriptionRef.current) {
+          privateMessageSubscriptionRef.current.unsubscribe();
+        }
+  
+        privateMessageSubscriptionRef.current = stompClient.current.subscribe('/user/queue/messages', (message) => {
+          if (message.body) {
+            const receivedMessage = JSON.parse(message.body);
+            if (receivedMessage.content && receivedMessage.chatId === selectedChat?.id) {
+              setMessages((prevMessages) => [...prevMessages, {
+                sender: receivedMessage.sender,
+                message: receivedMessage.content,
+                createdAt: new Date(),
+              }]);
+            }
+          }
+        });
+  
+        fetchMessages();
+      }, (error) => {
+        console.error('WebSocket error:', error);
+      });
+    } else {
+      // Már csatlakozva van, csak privát üzenetekre iratkozunk fel újra
+      if (privateMessageSubscriptionRef.current) {
+        privateMessageSubscriptionRef.current.unsubscribe();
+      }
+  
+      privateMessageSubscriptionRef.current = stompClient.current.subscribe('/user/queue/messages', (message) => {
+        if (message.body) {
+          const receivedMessage = JSON.parse(message.body);
+          if (receivedMessage.content && receivedMessage.chatId === selectedChat?.id) {
+            setMessages((prevMessages) => [...prevMessages, {
+              sender: receivedMessage.sender,
+              message: receivedMessage.content,
+              createdAt: new Date(),
+            }]);
+          }
+        }
+      });
+  
       fetchMessages();
-    }, (error) => {
-      console.error('WebSocket error:', error);
-    });
+    }
+  };
+  
+
+  const fetchAnnouncements = async () => {
+    try {
+      const response = await authService.getAnnouncements();
+      setAnnouncements(response.data);
+    } catch (error) {
+      console.error('Error fetching announcements', error);
+    }
   };
 
   const fetchMessages = async () => {
@@ -218,12 +257,12 @@ useEffect(() => {
   };
 
   const disconnectWebSocket = () => {
-    if (stompClient.current && stompClient.current.connected) {
-        stompClient.current.disconnect(() => {
-            console.log('WebSocket disconnected');
-        });
+    if (privateMessageSubscriptionRef.current) {
+      privateMessageSubscriptionRef.current.unsubscribe();
+      privateMessageSubscriptionRef.current = null;
     }
-};
+    // Nem hívunk teljes disconnect-et, így az announcements aktív marad
+  };
 
   const handleChatClick = (chat) => {
     if (chat.id !== selectedChat?.id) {
@@ -415,6 +454,30 @@ useEffect(() => {
             <div className="chat-list-container">
               <h2>Chats</h2>
               <ul className="chat-list">
+              {announcements.length > 0 && (
+  <li 
+    key="announcement" 
+    className={`chat-item ${selectedChat?.id === 'announcement' ? 'active' : ''}`}
+    onClick={() => {
+      setSelectedChat({ id: 'announcement', type: 'announcement' });
+      setMessages([...announcements]
+        .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt)) // növekvő időrend
+        .map(a => ({
+          sender: a.senderUsername,
+          message: a.message,
+          createdAt: a.createdAt,
+          isAnnouncement: true
+        }))
+      );
+    }}
+  >
+
+    <div className="chat-info">
+      <CampaignIcon className='icon'></CampaignIcon>
+      <span className="chat-name"> Announcements</span>
+    </div>
+  </li>
+)}
                 {chats.map((chat) => {
                   const chatDetail = chatDetails.find(detail => detail.id === chat.id);
                   if (!chatDetail) return null;
@@ -631,8 +694,13 @@ useEffect(() => {
                     {messages.map((message, index) => (
                       <li 
                         key={index} 
-                        className={`message ${message.sender === currentUser.userName ? 'sent' : 'received'}`
-                      }
+                        className={`message ${
+                          message.isAnnouncement
+                            ? 'received'
+                            : message.sender === currentUser.userName
+                            ? 'sent'
+                            : 'received'
+                        }`}
                       ref={index === messages.length -1 ? lastMessageRef : null}
 
                       >
@@ -652,7 +720,8 @@ useEffect(() => {
                   </ul>
                 )}
               </div>
-              <form className="message-form" onSubmit={handleSendMessage}>
+              {selectedChat.type !== 'announcement' && (
+                <form className="message-form" onSubmit={handleSendMessage}>
                 <input
                   type="text"
                   value={newMessage}
@@ -662,6 +731,8 @@ useEffect(() => {
                 />
                 <button type="submit" className="send-btn">Send</button>
               </form>
+              )}
+              
             </>
           ) : (
             <div className="no-chat-selected">

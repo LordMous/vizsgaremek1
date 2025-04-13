@@ -8,10 +8,11 @@ function Admin() {
   const [filteredUsers, setFilteredUsers] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentUser, setCurrentUser] = useState(authService.getCurrentUser());
+  const [newAnnouncement, setNewAnnouncement] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
-    if(!currentUser){
+    if (!currentUser) {
       navigate('/login');
       return;
     }
@@ -29,6 +30,22 @@ function Admin() {
     }
   };
 
+
+
+  const handleSearch = (e) => {
+    const term = e.target.value.toLowerCase();
+    setSearchTerm(term);
+    setFilteredUsers(users.filter(user =>
+      user.userName.toLowerCase().includes(term) ||
+      user.email.toLowerCase().includes(term) ||
+      user.phoneNumber.toLowerCase().includes(term)
+    ));
+  };
+
+  const handleBackToDashboard = () => {
+    navigate('/dashboard');
+  }
+
   const handleDelete = async (id) => {
     try {
       await authService.deleteUser(id);
@@ -42,38 +59,61 @@ function Admin() {
     }
   };
 
-  const handleSearch = (e) => {
-    const term = e.target.value.toLowerCase();
-    setSearchTerm(term);
-    setFilteredUsers(users.filter(user =>
-      user.userName.toLowerCase().includes(term) ||
-      user.email.toLowerCase().includes(term) ||
-      user.phoneNumber.toLowerCase().includes(term)
-    ));
+
+  const handlePostAnnouncement = async () => {
+    try{
+      await authService.addAnnouncement({message: newAnnouncement});
+      setNewAnnouncement('');
+      alert("Announcement posted successfully");
+    }catch (err){
+      console.error("Error posting announcement", err);
+      alert("Error posting announcement");
+    }
   };
-
-  const handleBackToDashboard= () => {
-    navigate('/dashboard');
-  }
-
 
   return (
     <div className="admin-container">
       <div className="admin-header">
-      <h1 className="admin-title">Admin Dashboard</h1>
-      <p className="admin-subtitle">Manage all users</p>
-      
-      <input
-        type="text"
-        className="search-input"
-        placeholder="Search by username, email or phone..."
-        value={searchTerm}
-        onChange={handleSearch}
-      />
-      <button className="back-button" onClick={handleBackToDashboard}>
-        Back to Dashboard
-      </button>
+        <h1 className="admin-title">Admin Dashboard</h1>
+        <button className="back-button" onClick={handleBackToDashboard}>
+              Back to Dashboard
+            </button>
+    
+        <div className="header-sections">
+          <div className="header-section">
+            <p className="admin-subtitle">Manage all users</p>
+              <input
+                type="text"
+                className="search-input"
+                placeholder="Search by username, email or phone..."
+                value={searchTerm}
+                onChange={handleSearch}
+              />
+            
+          </div>
+
+          <div className="header-section">
+            <p className="admin-subtitle">Post new announcement</p>
+            <textarea
+              value={newAnnouncement}
+              onChange={(e) => setNewAnnouncement(e.target.value)}
+              placeholder="Write your announcement here..."
+              className="announcement-input"
+              rows="4"
+            />
+            <button
+              className="post-announcement-button"
+              onClick={handlePostAnnouncement}
+            >
+              Post Announcement
+            </button>
+          </div>
       </div>
+    </div>
+
+
+      
+
       <div className="user-list2">
         {filteredUsers.length > 0 ? (
           filteredUsers.map(user => (

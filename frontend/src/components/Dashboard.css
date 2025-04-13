@@ -12,6 +12,16 @@ html, body {
   padding: 0;
 }
 
+.chat-info {
+  display: flex;
+  align-items: center;
+  padding: 10px;
+}
+
+.icon{
+  transform: scale(1.6666);
+  margin-right: 20px;
+}
 
 /* Header */
 .dashboard-header {
@@ -26,6 +36,20 @@ html, body {
 .app-title {
   font-size: 24px;
   font-weight: bold;
+}
+
+.message.received .message-time {
+  align-self: flex-start;
+  font-size: 0.75rem;
+  color: gray;
+  margin-top: 4px;
+}
+
+.message.sent .message-time {
+  align-self: flex-end;
+  font-size: 0.75rem;
+  color: gray;
+  margin-top: 4px;
 }
 
 .user-info {

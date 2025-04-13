@@ -67,6 +67,12 @@ const addContact = (userId, contactUserId) => {
   );
 };
 
+const getAnnouncements = () => {
+  return axios.get(`${API_URL}/announcements`, getAuthHeaders());
+};
+
+
+
 const getCurrentUser = () => {
   const token = sessionStorage.getItem('token'); // localStorage helyett sessionStorage
   const userId = sessionStorage.getItem('userId');
@@ -116,6 +122,12 @@ const deleteUser = (userId) => {
   return axios.delete(`${API_URL}/user/${userId}`, getAuthHeaders());
 }
 
+const addAnnouncement = (message) => {
+  return axios.post(`${API_URL}/announcements`,message, getAuthHeaders());
+}
+
+
+
 
 export default {
   register,
@@ -137,4 +149,6 @@ export default {
   uploadProfilePicture,
   getUserProfilePicture,
   deleteUser,
+  getAnnouncements,
+  addAnnouncement
 };
