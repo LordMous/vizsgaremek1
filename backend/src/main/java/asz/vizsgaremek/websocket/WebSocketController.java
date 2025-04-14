@@ -29,6 +29,7 @@ public class WebSocketController {
 
     public void sendContactUpdate(String username, String message) {
         // Privát értesítés a kontaktok frissítéséről
+        System.out.println("ADATKULDES CONTACT");
         template.convertAndSendToUser(username, "/queue/contacts", message);
     }
 

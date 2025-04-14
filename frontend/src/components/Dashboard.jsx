@@ -55,6 +55,11 @@ function Dashboard() {
         console.log('Announcement received:', data);
         setAnnouncements((prev) => [data, ...prev]); // legfrissebb előre
       });
+      stompClient.current.subscribe('/user/queue/contacts', (message) => {
+        const data = JSON.parse(message.body);
+        console.log('Contact request received:', data);
+        fetchPendingRequests(); // Frissítjük a várakozó kéréseket
+      })
     })
     }
   }, [currentUser]);
