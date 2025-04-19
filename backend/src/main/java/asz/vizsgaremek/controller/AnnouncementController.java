@@ -7,6 +7,7 @@ import asz.vizsgaremek.model.User;
 import asz.vizsgaremek.service.AnnouncementService;
 import asz.vizsgaremek.service.UserService;
 import asz.vizsgaremek.websocket.WebSocketController;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -14,6 +15,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/announcements")
+@Tag(name = "Announcement", description = "Here you can get the announcements and even post one if you're an admin")
 public class AnnouncementController {
 
     @Autowired

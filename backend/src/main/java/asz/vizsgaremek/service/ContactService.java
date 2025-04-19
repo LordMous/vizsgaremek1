@@ -1,5 +1,6 @@
 package asz.vizsgaremek.service;
 
+import asz.vizsgaremek.dto.contact.ContactDTO;
 import asz.vizsgaremek.enums.Status;
 import asz.vizsgaremek.model.Contact;
 import asz.vizsgaremek.model.User;
@@ -10,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class ContactService {
@@ -30,8 +32,9 @@ public class ContactService {
         contact.setContactUser(contactUser);
         contact.setStatus(Status.PENDING);
 
-
-        webSocketController.sendContactUpdate(contactUser.getUsername(), "New contact request from " + user.getUsername());
+        ContactDTO dto = new ContactDTO(contact);
+        webSocketController.sendContactUpdate(dto);
+        System.out.println(contactUser.getUsername()+" "+user.getUsername());
         return contactRepository.save(contact);
     }
 
@@ -54,9 +57,7 @@ public class ContactService {
         }
 
         contact.setStatus(status);
-
-        webSocketController.sendContactUpdate(contact.getUser().getUsername(), "Your contact request was " + status.toString().toLowerCase());
-        webSocketController.sendContactUpdate(contact.getContactUser().getUsername(), "You have a new contact: " + contact.getUser().getUsername());
+        webSocketController.sendContactUpdate(new ContactDTO(contact));
 
         return contactRepository.save(contact);
     }
@@ -64,10 +65,10 @@ public class ContactService {
     public void deleteContact(Integer userId, Integer contactUserId) {
         Contact contact = contactRepository.findByUserIdAndContactUserId(userId,contactUserId)
                 .orElseThrow(() -> new RuntimeException("Contact not found between user " + userId + " and " + contactUserId));
-
-        webSocketController.sendContactUpdate(contact.getUser().getUsername(), "Contact with " + contact.getContactUser().getUsername() + " was removed.");
-        webSocketController.sendContactUpdate(contact.getContactUser().getUsername(), "Contact with " + contact.getUser().getUsername() + " was removed.");
+        webSocketController.sendContactUpdate(new ContactDTO(contact));
 
         contactRepository.delete(contact);
     }
+
+
 }

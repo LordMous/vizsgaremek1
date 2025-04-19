@@ -104,6 +104,11 @@ public class UserService {
                 .orElseThrow(UserNotFoundException::new);
     }
 
+    public User findById(Integer id){
+        return repository.findById(id)
+                .orElseThrow(UserNotFoundException::new);
+    }
+
     // Regisztráció (jelszó titkosításával)
     public UserRead registerUser(UserSave userSave) {
         User user = new User();

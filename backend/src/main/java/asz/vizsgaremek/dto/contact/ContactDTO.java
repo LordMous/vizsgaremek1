@@ -1,4 +1,4 @@
-package asz.vizsgaremek.dto.user.contact;
+package asz.vizsgaremek.dto.contact;
 
 import asz.vizsgaremek.model.Contact;
 import lombok.Getter;

@@ -45,6 +45,7 @@ public class SecurityConfig {
                         .requestMatchers("/auth/register").permitAll()
                         .requestMatchers("/chat/**").authenticated()
                         .requestMatchers("/images/**").permitAll()
+                        .requestMatchers("/files/**", "/images/**").permitAll()
                         .requestMatchers("/contacts/**").authenticated()
                         .requestMatchers("/message/**").authenticated()
                         .requestMatchers("/user/**").authenticated()

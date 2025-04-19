@@ -4,6 +4,7 @@ import SockJS from 'sockjs-client';
 import authService from '../services/authService';
 import { Link, useNavigate } from 'react-router-dom';
 import CampaignIcon from '@mui/icons-material/Campaign';
+import AddIcon from '@mui/icons-material/Add';
 import './Dashboard.css'
 
 function Dashboard() {
@@ -12,6 +13,7 @@ function Dashboard() {
   const messageRef = useRef(null)
   const subscriptionRef = useRef(null);
   const privateMessageSubscriptionRef = useRef(null);
+  const fileInputRef = useRef(null);
   const [chats, setChats] = useState([]);
   const [selectedChat, setSelectedChat] = useState(null);
   const [messages, setMessages] = useState([]);
@@ -55,10 +57,12 @@ function Dashboard() {
         console.log('Announcement received:', data);
         setAnnouncements((prev) => [data, ...prev]); // legfrissebb előre
       });
-      stompClient.current.subscribe('/user/queue/contacts', (message) => {
+      stompClient.current.subscribe('/topic/contacts', (message) => {
         const data = JSON.parse(message.body);
         console.log('Contact request received:', data);
         fetchPendingRequests(); // Frissítjük a várakozó kéréseket
+        fetchBlocked();
+        fetchFriends();
       })
     })
     }
@@ -220,7 +224,7 @@ useEffect(() => {
         alert('Friend unblocked!');
         fetchUsers();
       }catch (error) {
-        console.error('Error deleting contact', error);
+        alert("You can't unblock users that have blocked you!")
       }
   }
 
@@ -369,6 +373,39 @@ useEffect(() => {
 
   const notificationBadgeLenght = pendingRequests.filter(contact => contact.contactUserName === currentUser.userName).length
 
+  const handleFileUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file || !selectedChat) return;
+  
+    const senderId = currentUser.userId;
+    const chatId = selectedChat.id;
+  
+    const chatDetail = chatDetails.find(chat => chat.id === chatId);
+    const receiverUserName = chatDetail.user1Name === currentUser.userName
+      ? chatDetail.user2Name
+      : chatDetail.user1Name;
+  
+    const receiver = users.find(u => u.userName === receiverUserName);
+    if (!receiver) return alert("Receiver not found");
+  
+    try {
+      await authService.uploadChatFile(senderId, receiver.id, chatId, file);
+      fetchMessages();
+    } catch (err) {
+      console.error("File upload failed:", err);
+      alert("Failed to send file.");
+    }
+  
+    // Clear input to allow re-upload of the same file
+    e.target.value = null;
+  };
+  
+
+  const handleAddIconClick = () => {
+    fileInputRef.current?.click();
+  };
+
+
   if (!currentUser) {
     return <div>Please log in to view your dashboard.</div>;
   }
@@ -460,29 +497,29 @@ useEffect(() => {
               <h2>Chats</h2>
               <ul className="chat-list">
               {announcements.length > 0 && (
-  <li 
-    key="announcement" 
-    className={`chat-item ${selectedChat?.id === 'announcement' ? 'active' : ''}`}
-    onClick={() => {
-      setSelectedChat({ id: 'announcement', type: 'announcement' });
-      setMessages([...announcements]
-        .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt)) // növekvő időrend
-        .map(a => ({
-          sender: a.senderUsername,
-          message: a.message,
-          createdAt: a.createdAt,
-          isAnnouncement: true
-        }))
-      );
-    }}
-  >
+                <li 
+                  key="announcement" 
+                  className={`chat-item ${selectedChat?.id === 'announcement' ? 'active' : ''}`}
+                  onClick={() => {
+                    setSelectedChat({ id: 'announcement', type: 'announcement' });
+                    setMessages([...announcements]
+                      .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt)) // növekvő időrend
+                      .map(a => ({
+                        sender: a.senderUsername,
+                        message: a.message,
+                        createdAt: a.createdAt,
+                        isAnnouncement: true
+                      }))
+                    );
+                  }}
+                >
 
-    <div className="chat-info">
-      <CampaignIcon className='icon'></CampaignIcon>
-      <span className="chat-name"> Announcements</span>
-    </div>
-  </li>
-)}
+                  <div className="chat-info">
+                    <CampaignIcon className='icon'></CampaignIcon>
+                    <span className="chat-name"> Announcements</span>
+                  </div>
+                </li>
+              )}
                 {chats.map((chat) => {
                   const chatDetail = chatDetails.find(detail => detail.id === chat.id);
                   if (!chatDetail) return null;
@@ -539,6 +576,7 @@ useEffect(() => {
                         <span onClick={()=>{
                           try{
                             deleteContact(user.id)
+                            fetchBlocked();
                           }catch (error) {
                             console.error('Error deleting contact');
                           }
@@ -714,7 +752,19 @@ useEffect(() => {
                             <span className="sender-name">{message.sender}</span>
                           )}
                           <div className="message-bubble">
-                            {message.message}
+                            {message.type === "file" ? (
+                              <a 
+                                href={`http://localhost:8080${message.message}`} 
+                                download 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                style={{ textDecoration: 'underline', color: 'white' }}
+                              >
+                                {message.message.split("/").pop()}
+                              </a>
+                            )  : (
+                              message.message
+                            )}
                           </div>
                           <span className="message-time">
                             {new Date(message.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
@@ -727,6 +777,13 @@ useEffect(() => {
               </div>
               {selectedChat.type !== 'announcement' && (
                 <form className="message-form" onSubmit={handleSendMessage}>
+                    <AddIcon onClick={handleAddIconClick}/>
+                  <input
+    ref={fileInputRef}
+    type="file"
+    style={{ display: 'none' }}
+    onChange={handleFileUpload}
+  />
                 <input
                   type="text"
                   value={newMessage}

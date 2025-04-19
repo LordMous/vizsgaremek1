@@ -164,6 +164,8 @@ html, body {
 }
 
 .blocked{
+  border-radius: 7px 7px 7px;
+  border: 1px solid red;
   margin-left: 15px;
   color: red;
 }

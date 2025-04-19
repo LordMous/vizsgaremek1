@@ -1,6 +1,7 @@
 package asz.vizsgaremek.websocket;
 
 import asz.vizsgaremek.dto.announcement.AnnouncementResponse;
+import asz.vizsgaremek.dto.contact.ContactDTO;
 import asz.vizsgaremek.service.MessageService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.handler.annotation.MessageMapping;
@@ -27,10 +28,10 @@ public class WebSocketController {
         return message; // Visszaküldjük az üzenetet a klienseknek
     }
 
-    public void sendContactUpdate(String username, String message) {
-        // Privát értesítés a kontaktok frissítéséről
+    public void sendContactUpdate(ContactDTO dto) {
         System.out.println("ADATKULDES CONTACT");
-        template.convertAndSendToUser(username, "/queue/contacts", message);
+        template.convertAndSend("/topic/contacts",dto);
+        //template.convertAndSend(username, "/user/topic/contacts", message);
     }
 
     public void broadcastAnnouncement(AnnouncementResponse response) {

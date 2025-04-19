@@ -7,6 +7,7 @@ import asz.vizsgaremek.dto.user.UserSave;
 import asz.vizsgaremek.enums.Role;
 import asz.vizsgaremek.model.User;
 import asz.vizsgaremek.service.UserService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.http.HttpStatus;
@@ -18,6 +19,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/auth")
+@Tag(name = "Authorization", description = "Here you can sign in or register")
 @CrossOrigin(origins = "http://localhost:5173") // Engedélyezi a frontendet
 public class AuthController {
     private final JwtUtil jwtUtil;

@@ -1,7 +1,7 @@
 package asz.vizsgaremek.controller;
 
 import asz.vizsgaremek.dto.user.UserRead;
-import asz.vizsgaremek.dto.user.contact.ContactDTO;
+import asz.vizsgaremek.dto.contact.ContactDTO;
 import asz.vizsgaremek.enums.Status;
 import asz.vizsgaremek.model.Contact;
 import asz.vizsgaremek.model.User;
@@ -84,5 +84,7 @@ public class ContactController {
         contactService.deleteContact(userId, contactUserId);
         return ResponseEntity.noContent().build();
     }
+
+
 
 }

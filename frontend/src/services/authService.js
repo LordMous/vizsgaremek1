@@ -126,7 +126,21 @@ const addAnnouncement = (message) => {
   return axios.post(`${API_URL}/announcements`,message, getAuthHeaders());
 }
 
+const uploadChatFile = (senderId, receiverId, chatId, file) => {
+  const formData = new FormData();
+  formData.append('file', file);
 
+  return axios.post(
+    `${API_URL}/message/chat/file?senderId=${senderId}&receiverId=${receiverId}&chatId=${chatId}`,
+    formData,
+    {
+      headers: {
+        ...getAuthHeaders().headers,
+        'Content-Type': 'multipart/form-data',
+      },
+    }
+  );
+};
 
 
 export default {
@@ -150,5 +164,6 @@ export default {
   getUserProfilePicture,
   deleteUser,
   getAnnouncements,
-  addAnnouncement
+  addAnnouncement,
+  uploadChatFile,
 };
