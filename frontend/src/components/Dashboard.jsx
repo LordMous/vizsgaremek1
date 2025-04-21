@@ -29,6 +29,10 @@ function Dashboard() {
   const [userPictures, setUserPictures] = useState({});
   const [announcements, setAnnouncements] = useState([]);
   
+  
+
+
+
 
   useEffect(() => {
     const fetchChats = async () => {
@@ -48,8 +52,11 @@ function Dashboard() {
       fetchBlocked();
       fetchAnnouncements();
       valami();
-      
-    const socket = new SockJS('http://localhost:8080/ws');
+
+
+      const token = sessionStorage.getItem('token');
+      const encodedToken = encodeURIComponent(token);
+      const socket = new SockJS(`http://localhost:8080/ws?token=${encodedToken}`);
     stompClient.current = Stomp.over(socket);
     stompClient.current.connect({}, () => {
       stompClient.current.subscribe('/topic/announcements', (announcement) => {
@@ -112,64 +119,56 @@ useEffect(() => {
   }, [selectedChat]);
 
   const connectWebSocket = () => {
-    if (!stompClient.current || !stompClient.current.connected) {
-      const socket = new SockJS('http://localhost:8080/ws');
-      stompClient.current = Stomp.over(socket);
-      stompClient.current.connect({}, () => {
-        console.log('Connected to WebSocket');
+    const token = sessionStorage.getItem('token');
   
-        // Feliratkozás csak akkor, ha még nincs announcement subscription
-        if (!subscriptionRef.current) {
-          subscriptionRef.current = stompClient.current.subscribe('/topic/announcements', (announcement) => {
-            const data = JSON.parse(announcement.body);
-            setAnnouncements((prev) => [data, ...prev]);
-          });
-        }
+    if (!token) {
+      console.error("No token found in sessionStorage.");
+      return;
+    }
   
-        // Privát üzenetek feliratkozás
-        if (privateMessageSubscriptionRef.current) {
-          privateMessageSubscriptionRef.current.unsubscribe();
-        }
+    const encodedToken = encodeURIComponent(token);
+    const socket = new SockJS(`http://localhost:8080/ws?token=${encodedToken}`);
+    stompClient.current = Stomp.over(socket);
   
-        privateMessageSubscriptionRef.current = stompClient.current.subscribe('/user/queue/messages', (message) => {
-          if (message.body) {
-            const receivedMessage = JSON.parse(message.body);
-            if (receivedMessage.content && receivedMessage.chatId === selectedChat?.id) {
-              setMessages((prevMessages) => [...prevMessages, {
-                sender: receivedMessage.sender,
-                message: receivedMessage.content,
-                createdAt: new Date(),
-              }]);
-            }
-          }
+    stompClient.current.connect({}, () => {
+      console.log('✅ WebSocket connected');
+  
+      // Global announcement subscription (only once)
+      if (!subscriptionRef.current) {
+        subscriptionRef.current = stompClient.current.subscribe('/topic/announcements', (announcement) => {
+          const data = JSON.parse(announcement.body);
+          setAnnouncements((prev) => [data, ...prev]);
         });
+      }
   
-        fetchMessages();
-      }, (error) => {
-        console.error('WebSocket error:', error);
-      });
-    } else {
-      // Már csatlakozva van, csak privát üzenetekre iratkozunk fel újra
+      // Always resubscribe to private messages
       if (privateMessageSubscriptionRef.current) {
         privateMessageSubscriptionRef.current.unsubscribe();
       }
   
       privateMessageSubscriptionRef.current = stompClient.current.subscribe('/user/queue/messages', (message) => {
         if (message.body) {
-          const receivedMessage = JSON.parse(message.body);
-          if (receivedMessage.content && receivedMessage.chatId === selectedChat?.id) {
-            setMessages((prevMessages) => [...prevMessages, {
-              sender: receivedMessage.sender,
-              message: receivedMessage.content,
-              createdAt: new Date(),
-            }]);
-          }
+            const receivedMessage = JSON.parse(message.body);
+            console.log("📨 New private message:", receivedMessage);
+    
+            if (receivedMessage.content && receivedMessage.chatId === selectedChat?.id) {
+                const isFile = typeof receivedMessage.content === "string" && receivedMessage.content.includes("/files/");
+                setMessages((prevMessages) => [...prevMessages, {
+                    sender: receivedMessage.sender,
+                    message: receivedMessage.content,
+                    createdAt: receivedMessage.timestamp || new Date(),
+                    type: isFile ? "file" : "text"
+                }]);
+            }
         }
-      });
+    });
   
       fetchMessages();
-    }
+    }, (error) => {
+      console.error('❌ WebSocket connection failed:', error);
+    });
   };
+  
   
 
   const fetchAnnouncements = async () => {
@@ -376,29 +375,43 @@ useEffect(() => {
   const handleFileUpload = async (e) => {
     const file = e.target.files[0];
     if (!file || !selectedChat) return;
-  
+
     const senderId = currentUser.userId;
     const chatId = selectedChat.id;
-  
+
     const chatDetail = chatDetails.find(chat => chat.id === chatId);
     const receiverUserName = chatDetail.user1Name === currentUser.userName
-      ? chatDetail.user2Name
-      : chatDetail.user1Name;
-  
+        ? chatDetail.user2Name
+        : chatDetail.user1Name;
+
     const receiver = users.find(u => u.userName === receiverUserName);
     if (!receiver) return alert("Receiver not found");
-  
+
     try {
-      await authService.uploadChatFile(senderId, receiver.id, chatId, file);
-      fetchMessages();
+        const response = await authService.uploadChatFile(senderId, receiver.id, chatId, file);
+        console.log("File upload response:", response.data); // Debugging line
+        const filePath = response.data; // Ensure this is the correct field for the file path
+        console.log("File uploaded successfully:", filePath);
+        fetchMessages();
+
+        // Send a WebSocket message to notify the receiver
+        if (stompClient.current && stompClient.current.connected) {
+            const message = {
+                sender: currentUser.userName,
+                content: filePath, // Use only the file path as the content
+                chatId: chatId,
+                type: "file"
+            };
+            stompClient.current.send('/app/chat', {}, JSON.stringify(message));
+        }
     } catch (err) {
-      console.error("File upload failed:", err);
-      alert("Failed to send file.");
+        console.error("File upload failed:", err);
+        alert("Failed to send file.");
     }
-  
+
     // Clear input to allow re-upload of the same file
     e.target.value = null;
-  };
+};
   
 
   const handleAddIconClick = () => {

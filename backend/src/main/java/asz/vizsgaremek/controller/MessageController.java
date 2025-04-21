@@ -7,7 +7,7 @@ import asz.vizsgaremek.websocket.ChatWebSocketHandler;
 import asz.vizsgaremek.websocket.WebSocketController;
 import asz.vizsgaremek.dto.user.message.MessageDTO;
 import asz.vizsgaremek.dto.user.message.MessageRequest;
-import asz.vizsgaremek.dto.user.message.SocketMessage;
+import asz.vizsgaremek.dto.message.SocketMessage;
 import asz.vizsgaremek.service.MessageService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.enums.SecuritySchemeIn;
@@ -90,11 +90,16 @@ public class MessageController {
         }
 
         SocketMessage socketMessage = new SocketMessage();
-        socketMessage.setSenderUsername(senderUsername);
+        socketMessage.setSender(senderUsername);
         socketMessage.setContent(content);
         socketMessage.setChatId(chatId);
         socketMessage.setTimestamp(LocalDateTime.now());
 
+        System.out.println("SOCKET MESSAGE : "+socketMessage.getTimestamp()+" "+socketMessage.getContent()+" "+socketMessage.getSender()+" "+socketMessage.getChatId());
+        System.out.println(receiverUsername);
+
+        System.out.println("🧠 Sending to receiverUsername: " + receiverUsername);
+        System.out.println("🧠 Sending to senderUsername: " + senderUsername);
 
         // Küldés a címzettnek
         template.convertAndSendToUser(receiverUsername, "/queue/messages", socketMessage);
@@ -111,26 +116,18 @@ public class MessageController {
     }
 
     @PostMapping(value = "/chat/file", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<String> uploadChatFile(@RequestBody MultipartFile file,
+    public ResponseEntity<String> uploadChatFile(@RequestParam("file") MultipartFile file,
                                                  @RequestParam("senderId") Integer senderId,
                                                  @RequestParam("receiverId") Integer receiverId,
                                                  @RequestParam("chatId") Integer chatId) {
         String filePath = messageService.storeChatFile(file, senderId, receiverId, chatId);
-
-
-        String sender = messageService.getChatPartner(chatId,userService.findById(senderId).getUsername());
-        String receiver = messageService.getChatPartner(chatId,userService.findById(receiverId).getUsername());
-        SocketMessage socketMessage = new SocketMessage();
-        socketMessage.setSenderUsername(userService.findById(senderId).getUsername());
-        socketMessage.setContent(filePath);
-        socketMessage.setChatId(chatId);
-        socketMessage.setTimestamp(java.time.LocalDateTime.now());
-        System.out.println(socketMessage.getChatId()+" "+socketMessage.getSenderUsername()+" "+socketMessage.getContent()+" "+socketMessage.getTimestamp());
-        sendPrivateSocketMessage(chatId,userService.findById(senderId).getUsername(),filePath);
-// WebSocket küldés
-        template.convertAndSendToUser(socketMessage.getSenderUsername(), "/queue/messages", socketMessage);
-        template.convertAndSendToUser(userService.findById(receiverId).getUsername(), "/queue/messages", socketMessage);
+        System.out.println("SENDER : "+" "+userService.findById(senderId).getUsername());
+        System.out.println("CHAT ID : "+" "+chatId);
+        System.out.println("FILE PATH : "+filePath);
+        String senderUsername = userService.findById(senderId).getUsername();
+        sendPrivateSocketMessage(chatId,senderUsername,filePath);
         controller.sendMessage("Fetch messages");
+        //System.out.println(filePath);
         return ResponseEntity.ok(filePath);
     }
 }

@@ -37,8 +37,6 @@ public class MessageService {
     @Autowired
     private ChatRepository chatRepository;
 
-    @Autowired
-    private WebSocketController webSocketController;
 
     public List<MessageDTO> getMessagesForChat(int chatId, String username) {
         Chat chat = chatRepository.findById(chatId)
@@ -132,7 +130,6 @@ public class MessageService {
 
         // Save message into database
         Message savedMessage = saveFileMessage(senderId, chatId, publicPath);
-        webSocketController.sendMessage(publicPath);
         return publicPath;
     }
 
