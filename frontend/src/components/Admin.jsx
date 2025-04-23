@@ -118,7 +118,7 @@ function Admin() {
         {filteredUsers.length > 0 ? (
           filteredUsers.map(user => (
             <div key={user.id} className="user-card">
-              <h2 className="user-name">{user.userName}</h2>
+              <h2 className="user-name1">{user.userName}</h2>
               <p className="user-info">Email: {user.email}</p>
               <p className="user-info">Phone: {user.phoneNumber}</p>
               <p className="user-info">Age: {user.age}</p>

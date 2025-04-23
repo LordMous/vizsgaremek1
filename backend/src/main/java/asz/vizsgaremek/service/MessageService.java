@@ -1,13 +1,12 @@
 package asz.vizsgaremek.service;
 
-import asz.vizsgaremek.dto.user.message.MessageDTO;
+import asz.vizsgaremek.dto.message.MessageDTO;
 import asz.vizsgaremek.model.Chat;
 import asz.vizsgaremek.model.Message;
 import asz.vizsgaremek.model.User;
 import asz.vizsgaremek.repository.ChatRepository;
 import asz.vizsgaremek.repository.MessageRepository;
 import asz.vizsgaremek.repository.UserRepository;
-import asz.vizsgaremek.websocket.WebSocketController;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;

@@ -1,4 +1,4 @@
-package asz.vizsgaremek.dto.user.message;
+package asz.vizsgaremek.dto.message;
 
 import lombok.Getter;
 
@@ -18,5 +18,4 @@ public class MessageDTO {
         this.type = type;
     }
 
-    // Getters
 }

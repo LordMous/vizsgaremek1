@@ -5,7 +5,7 @@ import asz.vizsgaremek.model.User;
 import asz.vizsgaremek.service.UserService;
 import asz.vizsgaremek.websocket.ChatWebSocketHandler;
 import asz.vizsgaremek.websocket.WebSocketController;
-import asz.vizsgaremek.dto.user.message.MessageDTO;
+import  asz.vizsgaremek.dto.message.MessageDTO;
 import asz.vizsgaremek.dto.user.message.MessageRequest;
 import asz.vizsgaremek.dto.message.SocketMessage;
 import asz.vizsgaremek.service.MessageService;

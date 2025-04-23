@@ -1,10 +1,19 @@
 INSERT INTO Message (chat_id, sender_id, message, message_type, created_at) VALUES
-                                                        (1, 101, 'Szia Attila!', 'text', '2023-10-01 10:00:00'),  -- ferid üzenete attilának
-                                                        (1, 102, 'Szia Ferid!', 'text', '2023-10-01 10:05:00'),    -- attila válasza feridnek
-                                                        (2, 101, 'Szia Kristof!', 'text', '2023-10-01 11:00:00'),  -- ferid üzenete kristofnak
-                                                        (2, 103, 'Szia Ferid!', 'text', '2023-10-01 11:10:00'),    -- kristof válasza feridnek
-                                                        (3, 102, 'Szia Istvan!', 'text', '2023-10-01 12:00:00'),   -- attila üzenete istvannak
-                                                        (3, 104, 'Szia Attila!', 'text', '2023-10-01 12:15:00'),   -- istvan válasza attilának
-                                                        (1, 101, 'Nézd ezt a képet!', 'image', '2023-10-01 10:10:00'),  -- ferid küld egy képet
-                                                        (2, 103, 'Itt egy videó!', 'video', '2023-10-01 11:20:00'),     -- kristof küld egy videót
-                                                        (3, 102, 'Küldök egy fájlt!', 'file', '2023-10-01 12:30:00');
+                                                                                (1, 101, 'Hey, Jamie! Long time no see. How’ve you been?', 'text', '2023-10-01 10:00:00'),
+                                                                                (1, 102, 'Oh, hey Alex! Yeah, it’s been a while. I’ve been good—just super busy with work. How about you?', 'text', '2023-10-01 10:02:00'),
+                                                                                (1, 101, 'Same here, honestly. Work’s been crazy, but I can’t complain too much. Did you end up going on that trip you were talking about last time?', 'text', '2023-10-01 10:03:00'),
+                                                                                (1, 102, 'Oh yeah, I did! Went to Costa Rica for two weeks. It was amazing—jungles, beaches, even got to see some sloths up close.', 'text', '2023-10-01 10:05:00'),
+                                                                                (1, 101, 'No way, that sounds incredible! I’ve always wanted to go there. Was the food as good as people say?', 'text', '2023-10-01 10:06:00'),
+                                                                                (1, 102, 'Oh, absolutely. The fresh fruit alone was worth the trip. And the coffee? Best I’ve ever had. You’d love it.', 'text', '2023-10-01 10:08:00'),
+                                                                                (1, 101, 'Ugh, now I’m jealous. I need a vacation. All I’ve been doing is binge-watching shows and pretending my apartment is a spa.', 'text', '2023-10-01 10:10:00'),
+                                                                                (1, 102, 'Hey, self-care is important too. Speaking of shows, anything good you’ve watched lately?', 'text', '2023-10-01 10:12:00'),
+                                                                                (1, 101, 'Actually, yeah! Have you seen that new sci-fi series on Netflix? The one with the time loops?', 'text', '2023-10-01 10:13:00'),
+                                                                                (1, 102, 'Oh, *Loopers*? I started it but got distracted. Is it worth sticking with?', 'text', '2023-10-01 10:15:00'),
+                                                                                (1, 101, 'Definitely. The first few episodes are slow, but it gets really mind-bending by the middle. We should watch it together sometime—I’ve been meaning to rewatch it.', 'text', '2023-10-01 10:16:00'),
+                                                                                (1, 102, 'Yeah, that’d be fun! Maybe next weekend?', 'text', '2023-10-01 10:17:00'),
+                                                                                (1, 101, 'Sounds like a plan. Oh—speaking of plans, did you hear about the new café that opened downtown?', 'text', '2023-10-01 10:18:00'),
+                                                                                (1, 102, 'The one with the rooftop seating? I’ve been meaning to check it out!', 'text', '2023-10-01 10:20:00'),
+                                                                                (1, 101, 'Same. Heard their pastries are unreal. Wanna grab coffee there this weekend before the show marathon?', 'text', '2023-10-01 10:21:00'),
+                                                                                (1, 102, 'Perfect. It’s a date—well, not a *date* date, but you know what I mean.', 'text', '2023-10-01 10:22:00'),
+                                                                                (1, 101, 'Yeah, yeah, I got you. Alright, I’ve gotta run—meeting in ten. But text me later?', 'text', '2023-10-01 10:23:00'),
+                                                                                (1, 102, 'For sure. Catch you later, Alex!', 'text', '2023-10-01 10:24:00');

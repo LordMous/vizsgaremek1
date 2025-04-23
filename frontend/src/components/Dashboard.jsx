@@ -790,7 +790,7 @@ useEffect(() => {
               </div>
               {selectedChat.type !== 'announcement' && (
                 <form className="message-form" onSubmit={handleSendMessage}>
-                    <AddIcon onClick={handleAddIconClick}/>
+                    <AddIcon className='addicon' onClick={handleAddIconClick}/>
                   <input
     ref={fileInputRef}
     type="file"
