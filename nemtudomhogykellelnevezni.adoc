@@ -1,0 +1,592 @@
+= API Modell Dokumentáció
+
+== Tartalomjegyzék
+
+* <<koezlemeny,Announcement>>
+* <<cseveges,Chat>>
+* <<kapcsolat,Contact>>
+* <<kep,Img>>
+* <<uzenet,Message>>
+* <<felhasznalo,User>>
+* <<kapcsolati-osszefoglalo,Kapcsolati összefoglaló>>
+
+[[koezlemeny]]
+== 📢 Announcement
+
+Rendszerközleményeket reprezentál, amelyeket felhasználók küldhetnek.
+
+=== Mezők
+
+[cols="1,1,2,2", options="header"]
+|===
+| Mező | Típus | Leírás | Megkötések
+| id | Integer | Egyedi azonosító | Automatikusan generált
+| message | String | A közlemény tartalma | Kötelező, TEXT típus
+| createdAt | LocalDateTime | Létrehozás időpontja | Alapértelmezett az aktuális idő
+| sender | User | A közleményt létrehozó felhasználó | Több-egy kapcsolat
+|===
+
+=== Konstruktorok
+
+`Announcement(String message, User sender)` – Létrehoz egy új közleményt üzenettel és küldővel.
+
+[[cseveges]]
+== 💬 Chat
+
+Két felhasználó közötti csevegést reprezentál.
+
+=== Mezők
+
+[cols="1,1,2,2", options="header"]
+|===
+| Mező | Típus | Leírás | Megkötések
+| id | Integer | Egyedi azonosító | Automatikusan generált
+| user1 | User | A csevegés első résztvevője | Több-egy kapcsolat, JSON ignore
+| user2 | User | A csevegés második résztvevője | Több-egy kapcsolat, JSON ignore
+| messages | List<Message> | A csevegés üzenetei | Egy-több kapcsolat, JSON ignore
+|===
+
+[[kapcsolat]]
+== 👥 Contact
+
+Felhasználók közötti kapcsolatokat reprezentál.
+
+=== Mezők
+
+[cols="1,1,2,2", options="header"]
+|===
+| Mező | Típus | Leírás | Megkötések
+| id | Integer | Egyedi azonosító | Automatikusan generált
+| user | User | A kapcsolat tulajdonosa | Több-egy kapcsolat
+| contactUser | User | A kapcsolatban lévő másik felhasználó | Több-egy kapcsolat
+| status | Status | A kapcsolat állapota | EnumType.STRING
+|===
+
+[[kep]]
+== 🖼️ Img
+
+Rendszerbeli képeket reprezentál.
+
+=== Mezők
+
+[cols="1,1,2,2", options="header"]
+|===
+| Mező | Típus | Leírás | Megkötések
+| id | Integer | Egyedi azonosító | Automatikusan generált
+|===
+
+NOTE: Ez egy alapmodell, amely valószínűleg további képhez kapcsolódó mezőkkel bővülne.
+
+[[uzenet]]
+== 📨 Message
+
+Csevegésekben küldött üzeneteket reprezentál.
+
+=== Mezők
+
+[cols="1,1,2,2", options="header"]
+|===
+| Mező | Típus | Leírás | Megkötések
+| id | Integer | Egyedi azonosító | Automatikusan generált
+| chat | Chat | Az üzenethez tartozó csevegés | Több-egy kapcsolat
+| sender | User | Az üzenet küldője | Több-egy kapcsolat
+| message | String | Az üzenet tartalma |
+| messageType | String | Az üzenet típusa (pl. "text", "image") |
+| createdAt | Timestamp | Az üzenet küldésének ideje |
+|===
+
+[[felhasznalo]]
+== 👤 User
+
+A rendszer felhasználóit reprezentálja, hitelesítési képességekkel.
+
+=== Mezők
+
+[cols="1,1,2,2", options="header"]
+|===
+| Mező | Típus | Leírás | Megkötések
+| id | Integer | Egyedi azonosító | Automatikusan generált
+| email | String | Felhasználó email címe | Kötelező, egyedi
+| age | Integer | Felhasználó életkora |
+| userName | String | Felhasználónév | Kötelező, egyedi
+| password | String | Titkosított jelszó |
+| phoneNumber | String | Telefonszám | Kötelező, egyedi
+| chatsAsUser1 | List<Chat> | Csevegések (1. résztvevőként) | Egy-több kapcsolat
+| chatsAsUser2 | List<Chat> | Csevegések (2. résztvevőként) | Egy-több kapcsolat
+| sentMessages | List<Message> | A felhasználó által küldött üzenetek | Egy-több kapcsolat
+| picture | String | Profilkép referenciája |
+| role | Role | Felhasználó szerepköre | EnumType.STRING
+|===
+
+=== UserDetails implementáció
+
+* Engedélyek: a `role` enum alapján (`SimpleGrantedAuthority`)
+* Biztonsági jelzők: minden alapértelmezés szerint engedélyezve (`true`)
+* Felhasználónév: a `userName` mező alapján
+
+==== Főbb metódusok
+
+* `getAuthorities()` – visszaadja a felhasználó szerepköreit Spring Security engedélyként
+* `getUsername()` – visszaadja a `userName` mezőt
+
+[[kozlemeny-controller]]
+== 📢 AnnouncementController
+
+A Közlemény entitás REST végpontjai.
+
+=== Végpontok
+
+[cols="1,1,2,2", options="header"]
+|===
+| Módszer | Útvonal | Leírás | Megjegyzés
+| GET | /announcements | Összes közlemény lekérdezése |
+| POST | /announcements | Új közlemény létrehozása | message és senderId szükséges
+| DELETE | /announcements/{id} | Közlemény törlése ID alapján | Jogosultság ellenőrzés szükséges
+|===
+
+[[cseveges-controller]]
+== 💬 ChatController
+
+A Csevegés entitáshoz tartozó REST végpontok.
+
+=== Végpontok
+
+[cols="1,1,2,2", options="header"]
+|===
+| Módszer | Útvonal | Leírás | Megjegyzés
+| POST | /chats | Új csevegés indítása két felhasználó között | user1Id és user2Id mezők
+| GET | /chats/user/{userId} | Egy adott felhasználóhoz tartozó csevegések lekérdezése |
+| GET | /chats/existing/{user1Id}/{user2Id} | Meglévő csevegés lekérdezése két felhasználó között |
+|===
+
+[[kapcsolat-controller]]
+== 👥 ContactController
+
+Felhasználók közötti kapcsolatok kezelése.
+
+=== Végpontok
+
+[cols="1,1,2,2", options="header"]
+|===
+| Módszer | Útvonal | Leírás | Megjegyzés
+| GET | /contacts/{userId} | Felhasználó kapcsolatai |
+| POST | /contacts | Új kapcsolat létrehozása | userId, contactUserId, status
+| PUT | /contacts/{id} | Kapcsolat státuszának frissítése |
+| DELETE | /contacts/{id} | Kapcsolat törlése |
+|===
+
+[[uzenet-controller]]
+== 📨 MessageController
+
+Üzenetek küldése és lekérdezése.
+
+=== Végpontok
+
+[cols="1,1,2,2", options="header"]
+|===
+| Módszer | Útvonal | Leírás | Megjegyzés
+| POST | /messages | Új üzenet küldése | chatId, senderId, message, messageType
+| GET | /messages/chat/{chatId} | Egy adott csevegéshez tartozó üzenetek lekérdezése |
+|===
+
+[[felhasznalo-controller]]
+== 👤 UserController
+
+Felhasználók regisztrációja, bejelentkezése és adataik lekérdezése.
+
+=== Végpontok
+
+[cols="1,1,2,2", options="header"]
+|===
+| Módszer | Útvonal | Leírás | Megjegyzés
+| POST | /users/register | Új felhasználó regisztrációja |
+| POST | /users/login | Bejelentkezés (JWT token visszatérése) |
+| GET | /users/{id} | Felhasználó adatainak lekérdezése ID alapján |
+| PUT | /users/{id} | Felhasználó adatainak frissítése |
+|===
+
+= DTO Dokumentáció
+
+[[dto-section]]
+== 📦 Data Transfer Objects
+
+[[user-dtos]]
+=== 👤 Felhasználó DTO-k
+
+[[user-save-dto]]
+==== UserSave
+
+[cols="1,2,3", options="header"]
+|===
+| Mező | Típus | Leírás
+| userName | String | Felhasználónév (kötelező)
+| email | String | Email cím (kötelező)
+| phoneNumber | String | Telefonszám (kötelező)
+| password | String | Jelszó (kötelező)
+| age | Integer | Életkor (kötelező)
+|===
+
+[source,java]
+----
+package asz.vizsgaremek.dto.user;
+
+@Getter @Setter
+public class UserSave {
+    @NotNull private String userName;
+    @NotNull private String email;
+    @NotNull private String phoneNumber;
+    @NotNull private String password;
+    @NotNull private Integer age;
+}
+----
+
+[[user-read-dto]]
+==== UserRead
+
+[cols="1,2,3", options="header"]
+|===
+| Mező | Típus | Leírás
+| id | Integer | Felhasználó azonosító
+| (Örökölt mezők) | | UserSave összes mezője
+|===
+
+[source,java]
+----
+package asz.vizsgaremek.dto.user;
+
+@Getter @Setter
+public class UserRead extends UserSave {
+    private Integer id;
+}
+----
+
+[[user-list-item-dto]]
+==== UserListItem
+
+[cols="1,2,3", options="header"]
+|===
+| Mező | Típus | Leírás
+| id | Integer | Felhasználó azonosító
+| name | String | Felhasználó neve
+| email | String | Email cím
+| phone | String | Telefonszám
+|===
+
+[source,java]
+----
+package asz.vizsgaremek.dto.user;
+
+@Getter @Setter @NoArgsConstructor
+public class UserListItem {
+    private Integer id;
+    private String name;
+    private String email;
+    private String phone;
+}
+----
+
+[[picture-read-dto]]
+==== PictureRead
+
+[cols="1,2,3", options="header"]
+|===
+| Mező | Típus | Leírás
+| id | Integer | Kép azonosító
+| fullPath | String | Kép teljes elérési útja
+|===
+
+[source,java]
+----
+package asz.vizsgaremek.dto.user;
+
+@Data
+public class PictureRead {
+    private Integer id;
+    private String fullPath;
+}
+----
+
+[[login-response-dto]]
+==== LoginResponseDTO
+
+[cols="1,2,3", options="header"]
+|===
+| Mező | Típus | Leírás
+| token | String | JWT token
+| userId | Integer | Bejelentkezett felhasználó ID-ja
+|===
+
+[source,java]
+----
+package asz.vizsgaremek.dto.user;
+
+@Getter @Setter
+public class LoginResponseDTO {
+    private String token;
+    private Integer userId;
+}
+----
+
+[[message-dtos]]
+=== 📨 Üzenet DTO-k
+
+[[message-dto]]
+==== MessageDTO
+
+[cols="1,2,3", options="header"]
+|===
+| Mező | Típus | Leírás
+| sender | String | Küldő felhasználó neve
+| message | String | Üzenet tartalma
+| createdAt | Timestamp | Küldés időpontja
+| type | String | Üzenet típusa
+|===
+
+[source,java]
+----
+package asz.vizsgaremek.dto.user.message;
+
+@Getter
+public class MessageDTO {
+    private String sender;
+    private String message;
+    private Timestamp createdAt;
+    private String type;
+
+    public MessageDTO(String sender, String message, Timestamp createdAt, String type) {
+        this.sender = sender;
+        this.message = message;
+        this.createdAt = createdAt;
+        this.type = type;
+    }
+}
+----
+
+[[socket-message-dto]]
+==== SocketMessage
+
+[cols="1,2,3", options="header"]
+|===
+| Mező | Típus | Leírás
+| sender | String | Küldő felhasználó
+| content | String | Üzenet tartalma
+| chatId | Integer | Csevegés azonosító
+| timestamp | LocalDateTime | Küldés időpontja
+|===
+
+[source,java]
+----
+package asz.vizsgaremek.dto.message;
+
+@Getter @Setter
+public class SocketMessage {
+    private String sender;
+    private String content;
+    private Integer chatId;
+    private LocalDateTime timestamp;
+}
+----
+
+[[message-request-dto]]
+==== MessageRequest
+
+[cols="1,2,3", options="header"]
+|===
+| Mező | Típus | Leírás
+| chatId | int | Csevegés azonosító
+| message | String | Küldendő üzenet
+|===
+
+[source,java]
+----
+package asz.vizsgaremek.dto.user.message;
+
+@Getter
+public class MessageRequest {
+    private int chatId;
+    private String message;
+}
+----
+
+[[contact-dtos]]
+=== 👥 Kapcsolat DTO-k
+
+[[contact-dto]]
+==== ContactDTO
+
+[cols="1,2,3", options="header"]
+|===
+| Mező | Típus | Leírás
+| id | Integer | Kapcsolat azonosító
+| userId | Integer | Tulajdonos felhasználó ID
+| contactUserId | Integer | Kapcsolatban lévő felhasználó ID
+| contactUserName | String | Kapcsolatban lévő felhasználó neve
+| contactEmail | String | Kapcsolatban lévő felhasználó emailje
+| status | String | Kapcsolat státusza
+| userName | String | Tulajdonos felhasználó neve
+|===
+
+[source,java]
+----
+package asz.vizsgaremek.dto.contact;
+
+@Getter @Setter
+public class ContactDTO {
+    private Integer id;
+    private Integer userId;
+    private Integer contactUserId;
+    private String contactUserName;
+    private String contactEmail;
+    private String status;
+    private String userName;
+
+    public ContactDTO(Contact contact) {
+        this.id = contact.getId();
+        this.userId = contact.getUser().getId();
+        this.contactUserId = contact.getContactUser().getId();
+        this.contactUserName = contact.getContactUser().getUserName();
+        this.contactEmail = contact.getContactUser().getEmail();
+        this.status = contact.getStatus().name();
+        this.userName = contact.getUser().getUserName();
+    }
+}
+----
+
+[[chat-dtos]]
+=== 💬 Csevegés DTO-k
+
+[[chat-dto]]
+==== ChatDTO
+
+[cols="1,2,3", options="header"]
+|===
+| Mező | Típus | Leírás
+| id | Integer | Csevegés azonosító
+| user1Name | String | 1. felhasználó neve
+| user2Name | String | 2. felhasználó neve
+|===
+
+[source,java]
+----
+package asz.vizsgaremek.dto.user.chat;
+
+@Getter @Setter
+public class ChatDTO {
+    private Integer id;
+    private String user1Name;
+    private String user2Name;
+
+    public ChatDTO(Integer id, String user1Name, String user2Name) {
+        this.id = id;
+        this.user1Name = user1Name;
+        this.user2Name = user2Name;
+    }
+}
+----
+
+[[announcement-dtos]]
+=== 📢 Közlemény DTO-k
+
+[[announcement-response-dto]]
+==== AnnouncementResponse
+
+[cols="1,2,3", options="header"]
+|===
+| Mező | Típus | Leírás
+| id | Integer | Közlemény azonosító
+| message | String | Közlemény tartalma
+| createdAt | LocalDateTime | Létrehozás időpontja
+| senderUsername | String | Küldő felhasználó neve
+|===
+
+[source,java]
+----
+package asz.vizsgaremek.dto.announcement;
+
+@Getter @Setter
+public class AnnouncementResponse {
+    private Integer id;
+    private String message;
+    private LocalDateTime createdAt;
+    private String senderUsername;
+
+    public AnnouncementResponse(Integer id, String message, LocalDateTime createdAt, String senderUsername) {
+        this.id = id;
+        this.message = message;
+        this.createdAt = createdAt;
+        this.senderUsername = senderUsername;
+    }
+}
+----
+
+[[announcement-request-dto]]
+==== AnnouncementRequest
+
+[cols="1,2,3", options="header"]
+|===
+| Mező | Típus | Leírás
+| message | String | Közlemény tartalma
+|===
+
+[source,java]
+----
+package asz.vizsgaremek.dto.announcement;
+
+@Getter @Setter
+public class AnnouncementRequest {
+    private String message;
+}
+----
+
+[[user-not-found-exception]]
+== 🚨 UserNotFoundException
+
+A felhasználó nem található hibát reprezentáló kivétel osztály.
+
+=== Osztály leírása
+
+`asz.vizsgaremek.exception.UserNotFoundException` -
+RuntimeException leszármazott, amely akkor dobódik, amikor a rendszer nem találja a kért felhasználót.
+
+=== Forráskód
+
+[source,java]
+----
+package asz.vizsgaremek.exception;
+
+public class UserNotFoundException extends RuntimeException {
+}
+----
+
+=== Jellemzők
+
+* `RuntimeException` leszármazott
+* Parameter nélküli konstruktor
+* Alapértelmezett hibaüzenettel rendelkezik
+* Szerializálható (Serializable)
+
+=== Használati példa
+
+[source,java]
+----
+try {
+    User user = userRepository.findById(userId)
+        .orElseThrow(UserNotFoundException::new);
+} catch (UserNotFoundException ex) {
+    logger.error("Felhasználó nem található: " + userId);
+    throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
+}
+----
+
+[[kapcsolati-osszefoglalo]]
+== 🔄 Kapcsolati összefoglaló
+
+[cols="1,1,2", options="header"]
+|===
+| Kapcsolat | Típus | Leírás
+| Felhasználó → Közlemény | Egy-több | Egy felhasználó több közleményt küldhet
+| Felhasználó ↔ Csevegés | Több-több | Kétféle kapcsolat (`user1` / `user2`) keresztül
+| Felhasználó ↔ Kapcsolat | Önmagára hivatkozó | Felhasználók egymással való kapcsolatai
+| Csevegés → Üzenet | Egy-több | Egy csevegéshez több üzenet tartozhat
+| Felhasználó → Üzenet | Egy-több | Egy felhasználó több üzenetet küldhet
+|===
