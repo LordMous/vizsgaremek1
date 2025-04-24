@@ -291,6 +291,16 @@ html, body {
   word-break: break-word;
 }
 
+.add-friend-btn{
+  margin-left: 20px;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  background-color: lightgreen;
+}
+
+
 
 .addicon{
   margin-left: 10px;

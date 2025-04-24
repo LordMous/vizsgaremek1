@@ -1,0 +1,1 @@
+insert into contact(id, user_id, contact_user_id, status) values (1,101,102,'ACCEPTED')

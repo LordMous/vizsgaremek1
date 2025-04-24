@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef, use } from 'react';
 import { Stomp } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
-import authService from '../services/authService';
+import authService from '../../services/authService';
 import { Link, useNavigate } from 'react-router-dom';
 import CampaignIcon from '@mui/icons-material/Campaign';
 import AddIcon from '@mui/icons-material/Add';
@@ -29,11 +29,6 @@ function Dashboard() {
   const [userPictures, setUserPictures] = useState({});
   const [announcements, setAnnouncements] = useState([]);
   
-  
-
-
-
-
   useEffect(() => {
     const fetchChats = async () => {
       try {
@@ -57,8 +52,8 @@ function Dashboard() {
       const token = sessionStorage.getItem('token');
       const encodedToken = encodeURIComponent(token);
       const socket = new SockJS(`http://localhost:8080/ws?token=${encodedToken}`);
-    stompClient.current = Stomp.over(socket);
-    stompClient.current.connect({}, () => {
+      stompClient.current = Stomp.over(socket);
+      stompClient.current.connect({}, () => {
       stompClient.current.subscribe('/topic/announcements', (announcement) => {
         const data = JSON.parse(announcement.body);
         console.log('Announcement received:', data);
@@ -790,13 +785,13 @@ useEffect(() => {
               </div>
               {selectedChat.type !== 'announcement' && (
                 <form className="message-form" onSubmit={handleSendMessage}>
-                    <AddIcon className='addicon' onClick={handleAddIconClick}/>
-                  <input
-    ref={fileInputRef}
-    type="file"
-    style={{ display: 'none' }}
-    onChange={handleFileUpload}
-  />
+                  <AddIcon className='addicon' onClick={handleAddIconClick}/>
+                    <input
+                    ref={fileInputRef}
+                    type="file"
+                    style={{ display: 'none' }}
+                    onChange={handleFileUpload}
+                  />
                 <input
                   type="text"
                   value={newMessage}

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import authService from '../services/authService';
+import authService from '../../services/authService';
 
 function FriendsList() {
   const [friends, setFriends] = useState([]);
