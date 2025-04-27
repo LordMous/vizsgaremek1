@@ -3,6 +3,7 @@ package asz.vizsgaremek.converter;
 import asz.vizsgaremek.dto.user.UserListItem;
 import asz.vizsgaremek.dto.user.UserRead;
 import asz.vizsgaremek.dto.user.UserSave;
+import asz.vizsgaremek.enums.Role;
 import asz.vizsgaremek.model.User;
 
 import java.util.List;
@@ -35,13 +36,15 @@ public class UserConverter {
         user.setAge(userSave.getAge());
         user.setPhoneNumber(userSave.getPhoneNumber());
         user.setPassword(userSave.getPassword());
-        
+        user.setRole(userSave.getRole());
         return user;
     }
 
     public static User convertSaveToModel(int id, UserSave userSave){
         User user = convertSaveToModel(userSave);
         user.setId(id);
+        user.setRole(userSave.getRole());
+        user.setPicture(userSave.getPicture());
         return user;
     }
 
@@ -53,7 +56,8 @@ public class UserConverter {
         userRead.setEmail(createdUser.getEmail());
         userRead.setPhoneNumber(createdUser.getPhoneNumber());
         userRead.setPassword(createdUser.getPassword());
-
+        userRead.setRole(Role.USER);
+        userRead.setPicture(createdUser.getPicture());
         return userRead;
     }
 

@@ -16,4 +16,9 @@ INSERT INTO Message (chat_id, sender_id, message, message_type, created_at) VALU
                                                                                 (1, 101, 'Same. Heard their pastries are unreal. Wanna grab coffee there this weekend before the show marathon?', 'text', '2023-10-01 10:21:00'),
                                                                                 (1, 102, 'Perfect. It’s a date—well, not a *date* date, but you know what I mean.', 'text', '2023-10-01 10:22:00'),
                                                                                 (1, 101, 'Yeah, yeah, I got you. Alright, I’ve gotta run—meeting in ten. But text me later?', 'text', '2023-10-01 10:23:00'),
-                                                                                (1, 102, 'For sure. Catch you later, Alex!', 'text', '2023-10-01 10:24:00');
+                                                                                (1, 102, 'For sure. Catch you later, Alex!', 'text', '2023-10-01 10:24:00'),
+                                                                                (1,101,'Is this a good photo in your opinion?','text','2023-10-02 09:25:00'),
+                                                                                (1,101,'/files/2025-04-22/ALEX-98d700ef-5912-4b8c-8c1d-dec2222b0e80.jpg','file','2023-10-02 09:26:00'),
+                                                                                (1,102,'Yeah, it looks really good!','text','2023-10-02 09:27:00'),
+                                                                                (1,101,'Thanks, I am going to upload it then.','text','2023-10-02 09:28:00');
+

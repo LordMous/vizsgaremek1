@@ -275,10 +275,11 @@ useEffect(() => {
   };
 
   const handleStartChat = async (friend) => {
-
+    console.log("Starting chat with friend:", friend);
     try {
       // Ellenőrizzük, hogy van-e már chat a baráttal
       const friendName = friend.userName === currentUser.userName ? friend.contactUserName : friend.userName;
+      console.log("FRIEND : ", friend);
 
       const existingChat = chatDetails.find(chat =>
         (chat.user1Name === currentUser.userName && chat.user2Name === friendName) ||
@@ -289,10 +290,19 @@ useEffect(() => {
         // Ha van meglévő chat, azt állítjuk be
         setSelectedChat(existingChat);
       } else {
+        if(Number(friend.contactUserId) === Number(currentUser.userId)){
+          console.log("friend.contactUserId === currentUser.userId")
+          const response = await authService.createChat( currentUser.userId, friend.userId,);
+          setChats([...chats, response.data]);
+          setSelectedChat(response.data);
+        }else{
+          const response = await authService.createChat(currentUser.userId, friend.contactUserId);
+          setChats([...chats, response.data]);
+          setSelectedChat(response.data);
+        }
+       
         // Ha nincs meglévő chat, létrehozunk egyet
-        const response = await authService.createChat(currentUser.userId, friend.contactUserId);
-        setChats([...chats, response.data]);
-        setSelectedChat(response.data);
+        
       }
   
       // Átváltunk a "Chats" fülre
@@ -703,7 +713,6 @@ useEffect(() => {
                   const otherUser = chatDetail.user1Name === currentUser.userName 
                     ? chatDetail.user2Name 
                     : chatDetail.user1Name;
-                  
                   return (
                     <>
                       <div className="chat-partner">

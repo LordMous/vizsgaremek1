@@ -291,6 +291,29 @@ html, body {
   word-break: break-word;
 }
 
+.chat-header:empty {
+  display: none;
+}
+
+.accept-btn{
+  background-color: green;
+  color: white;
+  padding: 5px 10px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.reject-btn{
+  background-color: red;
+  color: white;
+  padding: 5px 10px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-left: 15px;
+}
+
 .add-friend-btn{
   margin-left: 20px;
   padding: 10px 20px;

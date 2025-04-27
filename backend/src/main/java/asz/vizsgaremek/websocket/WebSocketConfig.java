@@ -49,9 +49,6 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
                 Principal user = (Principal) accessor.getSessionAttributes().get("user");
                 if (user != null) {
                     accessor.setUser(user);
-                    System.out.println("✅ Principal set on inbound channel: " + user.getName());
-                } else {
-                    System.out.println("❌ No Principal found on inbound channel.");
                 }
                 return message;
             }

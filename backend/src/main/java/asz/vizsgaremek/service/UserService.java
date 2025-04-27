@@ -87,6 +87,7 @@ public class UserService {
 
     public UserRead updateUser(int id, @Valid UserSave userSave){
         throwExceptionIfUserNotFound(id);
+        System.out.println(userSave.getRole());
         User user = UserConverter.convertSaveToModel(id,userSave);
         User updatedUser = repository.save(user);
         return UserConverter.convertModelToRead(updatedUser);

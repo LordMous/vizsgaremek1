@@ -29,7 +29,6 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
     public void sendMessageToAll(String message) {
         for (WebSocketSession session : sessions) {
             try {
-                System.out.println("SENDING MESSAGE: " + message);
                 session.sendMessage(new TextMessage(message));
             } catch (Exception e) {
                 e.printStackTrace();

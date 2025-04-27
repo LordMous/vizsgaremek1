@@ -9,6 +9,7 @@ function Profile() {
     email: '',
     phoneNumber: '',
     age: '',
+    role: '',
   });
 
   const [isEditing, setIsEditing] = useState(false);
@@ -29,7 +30,9 @@ function Profile() {
       try {
         if (userId) {
           const response = await authService.getUserData(userId);
+          console.log(response.data)
           setUserData(response.data);
+
         }
       } catch (error) {
         console.error('Error fetching user data', error);
@@ -39,7 +42,7 @@ function Profile() {
         }
       }
     };
-
+    console.log(userData)
    
 
     const fetchProfilePicture = async () => {

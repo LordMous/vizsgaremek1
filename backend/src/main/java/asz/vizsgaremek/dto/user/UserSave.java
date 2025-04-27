@@ -1,5 +1,6 @@
 package asz.vizsgaremek.dto.user;
 
+import asz.vizsgaremek.enums.Role;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
@@ -18,6 +19,6 @@ public class UserSave {
     private String password;
     @NotNull
     private Integer age;
-
-
+    private Role role;
+    private String picture;
 }

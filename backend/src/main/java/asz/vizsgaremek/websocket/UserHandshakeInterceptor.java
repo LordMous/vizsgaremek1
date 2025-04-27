@@ -28,8 +28,6 @@ public class UserHandshakeInterceptor implements HandshakeInterceptor{
             if (token != null && token.startsWith("Bearer ")) {
                 token = token.substring(7); // Remove "Bearer "
             }
-            System.out.println("==== HANDSHAKE ====");
-            System.out.println("Token param: " + servletRequest.getServletRequest().getParameter("token"));
 
             try {
                 String username = jwtUtil.extractUsername(token);

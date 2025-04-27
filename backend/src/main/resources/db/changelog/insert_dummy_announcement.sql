@@ -1,0 +1,1 @@
+INSERT INTO Announcement(created_at, message, sender_id) values ('2023-10-01 10:24:00','Server will be closed between 2025.05.22 and 2025.05.25!',1);
