@@ -13,6 +13,7 @@ import asz.vizsgaremek.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -21,6 +22,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.io.File;
 import java.io.IOException;
@@ -85,11 +87,18 @@ public class UserService {
         return UserConverter.convertModelToRead(user);
     }
 
-    public UserRead updateUser(int id, @Valid UserSave userSave){
-        throwExceptionIfUserNotFound(id);
-        System.out.println(userSave.getRole());
-        User user = UserConverter.convertSaveToModel(id,userSave);
-        User updatedUser = repository.save(user);
+    public UserRead updateUser(int id, @Valid UserSave userSave) {
+        User existingUser = repository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+
+        // Csak a módosítható mezőket frissíted
+        existingUser.setUserName(userSave.getUserName());
+        existingUser.setEmail(userSave.getEmail());
+        existingUser.setPhoneNumber(userSave.getPhoneNumber());
+        existingUser.setAge(userSave.getAge());
+        // jelszóhoz nem nyúlsz
+
+        User updatedUser = repository.save(existingUser);
         return UserConverter.convertModelToRead(updatedUser);
     }
 

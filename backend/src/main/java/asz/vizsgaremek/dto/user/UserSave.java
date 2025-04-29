@@ -19,6 +19,5 @@ public class UserSave {
     private String password;
     @NotNull
     private Integer age;
-    private Role role;
-    private String picture;
+
 }
